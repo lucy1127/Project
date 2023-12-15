@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <set>
+#include <unordered_set>
+#include <utility>
 
 using json = nlohmann::json;
 
@@ -36,6 +38,13 @@ struct Order
     std::vector<OrderDetail> OrderList;
 };
 
+struct OrderInfo
+{
+    int OrderId;
+    double DueDate;
+    double ReleaseDate;
+    double PenaltyCost;
+};
 struct Machine
 {
     int MachineId;
@@ -46,10 +55,17 @@ struct Machine
     double ScanTime, RecoatTime, RemovalTime;
 };
 
+struct PartTypeOrderInfo
+{
+    int Material;
+    PartType *PartType;
+    OrderInfo OrderInfo;
+};
+
 struct Batch
 {
     int materialType;
-    std::vector<PartType> parts;
+    std::vector<PartTypeOrderInfo> parts;
     double totalArea;
 };
 
@@ -60,90 +76,11 @@ struct MachineBatch
     std::vector<Batch> Batches;
 };
 
-void printMachine(const Machine &machine)
-{
-    std::cout << "Machine ID: " << machine.MachineId << ", Area: " << machine.Area
-              << ", Height: " << machine.Height << ", Length: " << machine.Length
-              << ", Width: " << machine.Width << std::endl;
-    std::cout << "\tMaterials: ";
-    for (const auto &material : machine.Materials)
-    {
-        std::cout << material << " ";
-    }
-    std::cout << "\n\tMaterial Setup Times: ";
-    for (const auto &setupTimes : machine.MaterialSetup)
-    {
-        for (auto time : setupTimes)
-        {
-            std::cout << time << " ";
-        }
-        std::cout << "; ";
-    }
-    std::cout << "\n\tStart Setup Times: ";
-    for (const auto &time : machine.StartSetup)
-    {
-        std::cout << time << " ";
-    }
-    std::cout << "\n\tScan Time: " << machine.ScanTime
-              << "\n\tRecoat Time: " << machine.RecoatTime
-              << "\n\tRemoval Time: " << machine.RemovalTime << std::endl;
-}
-void printPartType(const PartType &part)
-{
-    std::cout << "PartType ID: " << part.PartTypeId << ", Height: " << part.Height
-              << ", Length: " << part.Length << ", Width: " << part.Width
-              << ", Area: " << part.Area << ", Volume: " << part.Volume << std::endl;
-}
-void printOrderDetail(const OrderDetail &detail, const std::map<int, PartType> &partTypes, const std::map<int, Order> &orders)
-{
-    const PartType &part = partTypes.at(detail.PartType->PartTypeId);
-    std::cout << "\tPartType ID: " << part.PartTypeId
-              << ", Quantity: " << detail.Quantity
-              << ", Material: " << detail.Material
-              << ", Quality: " << detail.Quality << std::endl;
-    std::cout << "\t\tPartType Details: Height: " << part.Height
-              << ", Length: " << part.Length
-              << ", Width: " << part.Width
-              << ", Area: " << part.Area
-              << ", Volume: " << part.Volume << std::endl;
-
-    // 遍歷 orders 映射，尋找包含當前 PartType 的訂單
-    for (const auto &orderPair : orders)
-    {
-        const Order &order = orderPair.second;
-        for (const auto &od : order.OrderList)
-        {
-            if (od.PartType->PartTypeId == detail.PartType->PartTypeId)
-            {
-                // 當找到包含當前 PartType 的訂單時，打印訂單信息
-                std::cout << "\t\t\tFrom Order ID: " << order.OrderId
-                          << ", DueDate: " << order.DueDate
-                          << ", ReleaseDate: " << order.ReleaseDate
-                          << ", PenaltyCost: " << order.PenaltyCost << std::endl;
-                // 可能只想打印一次訂單信息，如果是這樣，打印後可以跳出循環
-                break;
-            }
-        }
-    }
-}
-// 在呼叫 printOrderDetail 時傳遞 orders 映射
-void printOrder(const Order &order, const std::map<int, PartType> &partTypes, const std::map<int, Order> &orders)
-{
-    std::cout << "Order ID: " << order.OrderId
-              << ", DueDate: " << order.DueDate
-              << ", ReleaseDate: " << order.ReleaseDate
-              << ", PenaltyCost: " << order.PenaltyCost << std::endl;
-    for (const auto &detail : order.OrderList)
-    {
-        printOrderDetail(detail, partTypes, orders); // 傳遞 partTypes 和 orders 參數
-    }
-}
-
 bool compareMachines(const std::pair<int, Machine> &a, const std::pair<int, Machine> &b)
 {
     double totalTimeA = a.second.ScanTime + a.second.RecoatTime;
     double totalTimeB = b.second.ScanTime + b.second.RecoatTime;
-    return totalTimeA > totalTimeB; // Change to < for ascending order
+    return totalTimeA > totalTimeB; 
 }
 
 std::vector<std::pair<int, Machine>> sortMachines(const std::map<int, Machine> &machines)
@@ -202,12 +139,12 @@ std::map<int, std::vector<OrderDetail>> sortMaterialClassifiedOrderDetails(
     return sortedMaterialOrderDetails;
 }
 
-std::vector<int> generateFinalSortedPartTypes(
+std::vector<PartTypeOrderInfo> generateFinalSortedPartTypes(
     const std::map<int, std::vector<OrderDetail>> &sortedMaterialOrderDetails,
     const std::map<int, Order> &orders,
     const std::map<int, PartType> &partTypes)
 {
-    std::vector<int> finalSortedPartTypes;
+    std::vector<PartTypeOrderInfo> finalInfo;
 
     // 創建一個用於存儲所有 OrderDetail 的臨時向量
     std::vector<OrderDetail> allOrderDetails;
@@ -230,90 +167,39 @@ std::vector<int> generateFinalSortedPartTypes(
     // 添加排序後的 PartType ID 到最終向量
     for (const auto &detail : allOrderDetails)
     {
+        PartTypeOrderInfo info;
+        info.PartType = detail.PartType;
+        info.Material = detail.Material; // 假設 OrderDetail 中有 MaterialId
+        // info.Quantity = detail.Quantity;
+        const Order &order = orders.at(detail.OrderId);
+
+        // 创建 OrderInfo 并填充数据
+        OrderInfo orderInfo;
+        orderInfo.OrderId = order.OrderId;
+        orderInfo.DueDate = order.DueDate;
+        orderInfo.ReleaseDate = order.ReleaseDate;
+        orderInfo.PenaltyCost = order.PenaltyCost;
+
+        // 将 OrderInfo 赋值给 PartTypeOrderInfo 的 OrderInfo 成员
+        info.OrderInfo = orderInfo;
+
         for (int i = 0; i < detail.Quantity; ++i)
         {
-            finalSortedPartTypes.push_back(detail.PartType->PartTypeId);
+            finalInfo.push_back(info);
         }
     }
 
-    return finalSortedPartTypes;
+    return finalInfo;
 }
 
-void printFinalSortedPartTypes(const std::vector<int> &finalSortedPartTypes)
-{
-    for (int partTypeId : finalSortedPartTypes)
-    {
-        std::cout << partTypeId << ' ';
-    }
-    std::cout << std::endl; // 在输出完毕后换行
-}
-void printSortedMaterialOrderDetails(const std::map<int, std::vector<OrderDetail>> &sortedMaterialOrderDetails)
-{
-    for (const auto &materialEntry : sortedMaterialOrderDetails)
-    {
-        int materialType = materialEntry.first;
-        const auto &orderDetails = materialEntry.second;
 
-        std::cout << "Material Type: " << materialType << std::endl;
-
-        for (const auto &detail : orderDetails)
-        {
-            std::cout << "  Order ID: " << detail.OrderId
-                      << ", Quantity: " << detail.Quantity
-                      << ", Material: " << detail.Material
-                      << ", Quality: " << detail.Quality;
-
-            if (detail.PartType != nullptr)
-            {
-                std::cout << ", Part Type ID: " << detail.PartType->PartTypeId;
-                // 这里可以继续打印 PartType 的其他字段
-            }
-
-            std::cout << std::endl;
-        }
-
-        std::cout << std::endl;
-    }
-}
 
 std::vector<MachineBatch> createMachineBatches(
-    const std::map<int, std::vector<OrderDetail>> &sortedMaterials,
-    const std::vector<std::pair<int, Machine>> &sortedMachines,
-    const std::map<int, Order> &orders)
+    const std::vector<PartTypeOrderInfo> &sortedMaterials,
+    const std::vector<std::pair<int, Machine>> &sortedMachines)
 {
     std::vector<MachineBatch> machineBatches;
-    std::map<int, int> materialQuantities; // 存储每种材料的剩余数量
-
-    // 初始化材料数量
-    for (const auto &material : sortedMaterials)
-    {
-        for (const auto &detail : material.second)
-        {
-            materialQuantities[material.first] += detail.Quantity;
-        }
-    }
-
-    // 根据 DueDate 对材料类型进行排序
-    std::vector<int> materialTypes;
-    for (const auto &entry : sortedMaterials)
-    {
-        materialTypes.push_back(entry.first);
-    }
-    std::sort(materialTypes.begin(), materialTypes.end(),
-              [&](int lhs, int rhs)
-              {
-                  double minDueDateLhs = std::numeric_limits<double>::max();
-                  double minDueDateRhs = std::numeric_limits<double>::max();
-                  for (const auto &detail : sortedMaterials.at(lhs))
-                  {
-                      minDueDateLhs = std::min(minDueDateLhs, orders.at(detail.OrderId).DueDate);
-                  }
-                  for (const auto &detail : sortedMaterials.at(rhs))
-                  {
-                      minDueDateRhs = std::min(minDueDateRhs, orders.at(detail.OrderId).DueDate);
-                  }
-                  return minDueDateLhs < minDueDateRhs;
-              });
+    std::unordered_set<int> usedMaterialTypes;
 
     for (const auto &machinePair : sortedMachines)
     {
@@ -321,38 +207,62 @@ std::vector<MachineBatch> createMachineBatches(
         machineBatch.MachineId = machinePair.first;
         machineBatch.MachineArea = machinePair.second.Area;
 
-        double availableArea = machinePair.second.Area;
+        double availableArea = machineBatch.MachineArea;
         std::vector<Batch> batches;
+        Batch currentBatch;
+        bool batchOpen = false;
 
-        for (int materialType : materialTypes)
+        for (const auto &material : sortedMaterials)
         {
-            double totalArea = 0.0;
-            std::vector<PartType> partsInBatch;
+            if (usedMaterialTypes.find(material.Material) != usedMaterialTypes.end()) continue;
 
-            for (auto &orderDetail : sortedMaterials.at(materialType))
+            double partArea = material.PartType->Area;
+  
+            if (!batchOpen || (batchOpen && currentBatch.materialType == material.Material))
             {
-                // 只处理尚有剩余数量的材料
-                if (materialQuantities[materialType] > 0)
+                if (partArea <= availableArea)
                 {
-                    double partArea = orderDetail.PartType->Area * orderDetail.Quantity;
-                    if (totalArea + partArea <= availableArea && materialQuantities[materialType] >= orderDetail.Quantity)
+                    if (!batchOpen) 
                     {
-                        partsInBatch.push_back(*orderDetail.PartType);
-                        totalArea += partArea;
-                        materialQuantities[materialType] -= orderDetail.Quantity; // 减少剩余数量
+                        currentBatch = Batch();
+                        currentBatch.materialType = material.Material;
+                        currentBatch.totalArea = 0;
+                        batchOpen = true;
                     }
-                    else
+                    
+        
+                    currentBatch.parts.push_back(material);
+                    currentBatch.totalArea += partArea;
+                    availableArea -= partArea;
+                }
+                else
+                {
+    
+                    if (batchOpen)
                     {
-                        break; // 如果无法放置当前部件，则停止尝试放置该材料类型的更多部件
+                        batches.push_back(currentBatch); 
+                        batchOpen = false; 
                     }
                 }
             }
-
-            if (!partsInBatch.empty())
+            else
             {
-                batches.push_back({materialType, partsInBatch, totalArea});
-                availableArea -= totalArea;
+                if (batchOpen)
+                {
+                    batches.push_back(currentBatch);
+                    batchOpen = false;
+                }
+    
             }
+        }
+        if (batchOpen)
+        {
+            batches.push_back(currentBatch); 
+        }
+
+        for (const auto &batch : batches)
+        {
+            usedMaterialTypes.insert(batch.materialType);
         }
 
         machineBatch.Batches = batches;
@@ -362,6 +272,40 @@ std::vector<MachineBatch> createMachineBatches(
     return machineBatches;
 }
 
+
+
+void printFinalSorted(const std::vector<PartTypeOrderInfo> &finalSorted)
+{
+    for (const auto &item : finalSorted)
+    {
+        std::cout << "Material: " << item.Material << ", "
+                //   << "Quantity: " << item.Quantity << ", "
+                  << "PartType: " << item.PartType->PartTypeId << ", "
+                  << "Part Area: " << item.PartType->Area << ", "
+                  << "Order ID: " << item.OrderInfo.OrderId << ", "
+                  << "Due Date: " << item.OrderInfo.DueDate << ", "
+                  << "Release Date: " << item.OrderInfo.ReleaseDate << ", "
+                  << "Penalty Cost: " << item.OrderInfo.PenaltyCost << std::endl;
+    }
+}
+
+void printMachineBatches(const std::vector<MachineBatch>& machineBatches) {
+    for (const auto& machineBatch : machineBatches) {
+        std::cout << "Machine ID: " << machineBatch.MachineId 
+                  << ", Area: " << machineBatch.MachineArea << std::endl;
+                  
+        for (const auto& batch : machineBatch.Batches) {
+            std::cout << "  Material Type: " << batch.materialType
+                      << ", Total Area: " << batch.totalArea << std::endl;
+                      
+            for (const auto& part : batch.parts) {
+                std::cout << "    Part Type: " << part.PartType->PartTypeId 
+                          << ", Area: " << part.PartType->Area << std::endl;
+            }
+        }
+        std::cout << std::endl; 
+    }
+}
 
 void read_json(const std::string &file_path)
 {
@@ -407,7 +351,6 @@ void read_json(const std::string &file_path)
         m.RecoatTime = value["RecoatTime"];
         m.RemovalTime = value["RemovalTime"];
         machines[key] = m;
-        // printMachine(m); // Print Machine information
     }
 
     auto sortedMachines = sortMachines(machines); // 排序好的機器
@@ -426,7 +369,6 @@ void read_json(const std::string &file_path)
         p.Area = value["Area"];
         p.Volume = value["Volume"];
         partTypes[key] = p;
-        // printPartType(p);  // 打印 PartType 信息
     }
     // 解析 Orders 部分
     std::map<int, Order> orders;
@@ -451,48 +393,33 @@ void read_json(const std::string &file_path)
             od.OrderId = o.OrderId; // 设置 OrderId
             materialClassifiedOrderDetails[od.Material].push_back(od);
             o.OrderList.push_back(od);
-            // printOrderDetail(od, partTypes, orders);
         }
         orders[o.OrderId] = o;
-        // printOrder(o, partTypes, orders);
-    }
-
-    // 打印按 Material 分類的訂單細節
-    // Printing material classified order details
-    for (const auto &entry : materialClassifiedOrderDetails)
-    {
-        // std::cout << "Material: " << entry.first << std::endl;
-        for (const auto &detail : entry.second)
-        {
-            // Correctly passing all required arguments to the printOrderDetail function
-            // printOrderDetail(detail, partTypes, orders); // Pass the maps partTypes and orders here
-        }
     }
 
     auto sortedMaterials = sortMaterialClassifiedOrderDetails(materialClassifiedOrderDetails, orders, partTypes);
 
-    // printSortedMaterialOrderDetails(sortedMaterials);
-    // 假设这里是从之前函数中获取到的finalSortedPartTypes
-    std::vector<int> finalSortedPartTypes = generateFinalSortedPartTypes(sortedMaterials,orders,partTypes); // 这里应填入正确的参数
+    std::vector<PartTypeOrderInfo> finalSorted = generateFinalSortedPartTypes(sortedMaterials, orders, partTypes); // 这里应填入正确的参数
+    // printFinalSorted(finalSorted);
 
-    // 打印最终排序的零件类型ID
-    printFinalSortedPartTypes(finalSortedPartTypes);
+    auto machineBatches = createMachineBatches(finalSorted, sortedMachines);
 
-    auto machineBatches = createMachineBatches(sortedMaterials, sortedMachines, orders);
+    printMachineBatches(machineBatches);
+
 
     // 打印机器和分配的批次信息
-    for (const auto &machineBatch : machineBatches)
-    {
-        // std::cout << "Machine ID: " << machineBatch.MachineId << ", Area: " << machineBatch.MachineArea << std::endl;
-        // for (const auto &batch : machineBatch.Batches)
-        // {
-        //     std::cout << "\tMaterial Type: " << batch.materialType << ", Total Area: " << batch.totalArea << std::endl;
-        //     for (const auto &part : batch.parts)
-        //     {
-        //         std::cout << "\t\tPart Type: " << part.PartTypeId << ", Area: " << part.Area << std::endl;
-        //     }
-        // }
-    }
+    // for (const auto &machineBatch : machineBatches)
+    // {
+    //     std::cout << "Machine ID: " << machineBatch.MachineId << ", Area: " << machineBatch.MachineArea << std::endl;
+    //     for (const auto &batch : machineBatch.Batches)
+    //     {
+    //         std::cout << "\tMaterial Type: " << batch.materialType << ", Total Area: " << batch.totalArea << std::endl;
+    //         for (const auto &part : batch.parts)
+    //         {
+    //             std::cout << "\t\tPart Type: " << part.PartTypeId << ", Area: " << part.Area << std::endl;
+    //         }
+    //     }
+    // }
 }
 
 int main()
