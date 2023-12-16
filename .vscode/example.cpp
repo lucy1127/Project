@@ -75,12 +75,22 @@ struct MachineBatch
     double MachineArea;
     std::vector<Batch> Batches;
 };
-
+struct DelayedBatchInfo {
+    int machineId;       // 機器ID
+    int batchIndex;      // 批次索引
+    double penalty;      // 延遲懲罰
+};
+struct InitialSolutionResult {
+    double firstResult;
+    std::vector<double> maxPenaltyDelays;  // 每台機器的最大延遲懲罰
+    std::vector<int> maxPenaltyBatchIndices;  // 每台機器的最大延遲懲罰對應的批次索引
+    std::vector<DelayedBatchInfo> delayedBatches;  // 所有有延遲的批次
+};
 bool compareMachines(const std::pair<int, Machine> &a, const std::pair<int, Machine> &b)
 {
     double totalTimeA = a.second.ScanTime + a.second.RecoatTime;
     double totalTimeB = b.second.ScanTime + b.second.RecoatTime;
-    return totalTimeA > totalTimeB; 
+    return totalTimeA > totalTimeB;
 }
 
 std::vector<std::pair<int, Machine>> sortMachines(const std::map<int, Machine> &machines)
@@ -192,8 +202,6 @@ std::vector<PartTypeOrderInfo> generateFinalSortedPartTypes(
     return finalInfo;
 }
 
-
-
 std::vector<MachineBatch> createMachineBatches(
     const std::vector<PartTypeOrderInfo> &sortedMaterials,
     const std::vector<std::pair<int, Machine>> &sortedMachines)
@@ -214,34 +222,34 @@ std::vector<MachineBatch> createMachineBatches(
 
         for (const auto &material : sortedMaterials)
         {
-            if (usedMaterialTypes.find(material.Material) != usedMaterialTypes.end()) continue;
+            if (usedMaterialTypes.find(material.Material) != usedMaterialTypes.end())
+                continue;
 
             double partArea = material.PartType->Area;
-  
+
             if (!batchOpen || (batchOpen && currentBatch.materialType == material.Material))
             {
                 if (partArea <= availableArea)
                 {
-                    if (!batchOpen) 
+                    if (!batchOpen)
                     {
                         currentBatch = Batch();
                         currentBatch.materialType = material.Material;
                         currentBatch.totalArea = 0;
                         batchOpen = true;
                     }
-                    
-        
+
                     currentBatch.parts.push_back(material);
                     currentBatch.totalArea += partArea;
                     availableArea -= partArea;
                 }
                 else
                 {
-    
+
                     if (batchOpen)
                     {
-                        batches.push_back(currentBatch); 
-                        batchOpen = false; 
+                        batches.push_back(currentBatch);
+                        batchOpen = false;
                     }
                 }
             }
@@ -252,12 +260,11 @@ std::vector<MachineBatch> createMachineBatches(
                     batches.push_back(currentBatch);
                     batchOpen = false;
                 }
-    
             }
         }
         if (batchOpen)
         {
-            batches.push_back(currentBatch); 
+            batches.push_back(currentBatch);
         }
 
         for (const auto &batch : batches)
@@ -272,6 +279,104 @@ std::vector<MachineBatch> createMachineBatches(
     return machineBatches;
 }
 
+std::vector<double> calculateFinishTimes(const std::vector<MachineBatch> &machineBatches, std::map<int, Machine> machines)
+{
+    std::vector<double> finishTimes;
+
+    for (const auto &machineBatch : machineBatches)
+    {
+        const Machine &machine = machines.at(machineBatch.MachineId);
+
+        double volumeTime = 0.0;
+        double maxHeight = 0.0;
+
+        for (const auto &batch : machineBatch.Batches)
+        {
+            double batchVolume = 0.0;
+
+            for (const auto &partInfo : batch.parts)
+            {
+                batchVolume += partInfo.PartType->Volume;
+                maxHeight = std::max(maxHeight, partInfo.PartType->Height);
+                // std::cout << "batchVolume: " << batchVolume << std::endl;
+                // std::cout << "maxHeight: " << maxHeight << std::endl;
+            }
+
+            volumeTime += batchVolume * machine.ScanTime;
+
+            // std::cout << "volumeTime: " << volumeTime << std::endl;
+        }
+
+        double heightTime = maxHeight * machine.RecoatTime;
+        // std::cout << "heightTime: " << heightTime << std::endl;
+        // std::cout << "volumeTime: " << volumeTime << std::endl;
+        // std::cout << "--------------------- " << std::endl;
+
+        double finishTime = std::max(volumeTime, heightTime);
+
+        finishTimes.push_back(finishTime);
+    }
+
+    return finishTimes;
+}
+// 計算所有機台的總延遲懲罰費用並找出每台機器的最大延遲懲罰批次
+InitialSolutionResult calculateTotalPenalty(const std::vector<MachineBatch> &machineBatches,
+                                            const std::vector<double> &finishTimes) {
+    InitialSolutionResult result;
+    result.firstResult = 0.0;
+    result.maxPenaltyDelays.resize(machineBatches.size(), std::numeric_limits<double>::lowest());
+    result.maxPenaltyBatchIndices.resize(machineBatches.size(), -1);
+
+    for (size_t i = 0; i < machineBatches.size(); ++i) {
+        double machinePenalty = 0.0;
+
+        for (size_t j = 0; j < machineBatches[i].Batches.size(); ++j) {
+            const auto &batch = machineBatches[i].Batches[j];
+            for (const auto &partInfo : batch.parts) {
+                double deltaTime = partInfo.OrderInfo.DueDate - finishTimes[i];
+
+                if (deltaTime < 0) {
+                    double penaltyDelay = -deltaTime * partInfo.OrderInfo.PenaltyCost;
+                    machinePenalty += penaltyDelay;
+
+                    // 檢查並更新最大延遲懲罰
+                    if (penaltyDelay > result.maxPenaltyDelays[i]) {
+                        result.maxPenaltyDelays[i] = penaltyDelay;
+                        result.maxPenaltyBatchIndices[i] = static_cast<int>(j);
+                    }
+
+                    // 添加到有延遲的批次列表中
+                    DelayedBatchInfo delayedBatch;
+                    delayedBatch.machineId = machineBatches[i].MachineId;
+                    delayedBatch.batchIndex = static_cast<int>(j);
+                    delayedBatch.penalty = penaltyDelay;
+                    result.delayedBatches.push_back(delayedBatch);
+                }
+            }
+        }
+
+        result.firstResult += machinePenalty;
+    }
+
+    return result;
+}
+
+
+void printInitialSolutionResult(const InitialSolutionResult& result) {
+    std::cout << "總延遲懲罰費用: " << result.firstResult << std::endl;
+
+    for (size_t i = 0; i < result.maxPenaltyDelays.size(); ++i) {
+        std::cout << "機器 " << i + 1 << " 的最大延遲懲罰: " << result.maxPenaltyDelays[i];
+        std::cout << "，對應批次索引: " << result.maxPenaltyBatchIndices[i] << std::endl;
+    }
+
+    std::cout << "所有有延遲的批次：" << std::endl;
+    for (const auto& delayedBatch : result.delayedBatches) {
+        std::cout << "機器ID: " << delayedBatch.machineId;
+        std::cout << ", 批次索引: " << delayedBatch.batchIndex;
+        std::cout << ", 延遲懲罰: " << delayedBatch.penalty << std::endl;
+    }
+}
 
 
 void printFinalSorted(const std::vector<PartTypeOrderInfo> &finalSorted)
@@ -279,7 +384,7 @@ void printFinalSorted(const std::vector<PartTypeOrderInfo> &finalSorted)
     for (const auto &item : finalSorted)
     {
         std::cout << "Material: " << item.Material << ", "
-                //   << "Quantity: " << item.Quantity << ", "
+                  //   << "Quantity: " << item.Quantity << ", "
                   << "PartType: " << item.PartType->PartTypeId << ", "
                   << "Part Area: " << item.PartType->Area << ", "
                   << "Order ID: " << item.OrderInfo.OrderId << ", "
@@ -289,21 +394,25 @@ void printFinalSorted(const std::vector<PartTypeOrderInfo> &finalSorted)
     }
 }
 
-void printMachineBatches(const std::vector<MachineBatch>& machineBatches) {
-    for (const auto& machineBatch : machineBatches) {
-        std::cout << "Machine ID: " << machineBatch.MachineId 
+void printMachineBatches(const std::vector<MachineBatch> &machineBatches)
+{
+    for (const auto &machineBatch : machineBatches)
+    {
+        std::cout << "Machine ID: " << machineBatch.MachineId
                   << ", Area: " << machineBatch.MachineArea << std::endl;
-                  
-        for (const auto& batch : machineBatch.Batches) {
+
+        for (const auto &batch : machineBatch.Batches)
+        {
             std::cout << "  Material Type: " << batch.materialType
                       << ", Total Area: " << batch.totalArea << std::endl;
-                      
-            for (const auto& part : batch.parts) {
-                std::cout << "    Part Type: " << part.PartType->PartTypeId 
+
+            for (const auto &part : batch.parts)
+            {
+                std::cout << "    Part Type: " << part.PartType->PartTypeId
                           << ", Area: " << part.PartType->Area << std::endl;
             }
         }
-        std::cout << std::endl; 
+        std::cout << std::endl;
     }
 }
 
@@ -404,22 +513,14 @@ void read_json(const std::string &file_path)
 
     auto machineBatches = createMachineBatches(finalSorted, sortedMachines);
 
-    printMachineBatches(machineBatches);
+    // printMachineBatches(machineBatches);
 
+    auto finishTime = calculateFinishTimes(machineBatches, machines);
 
-    // 打印机器和分配的批次信息
-    // for (const auto &machineBatch : machineBatches)
-    // {
-    //     std::cout << "Machine ID: " << machineBatch.MachineId << ", Area: " << machineBatch.MachineArea << std::endl;
-    //     for (const auto &batch : machineBatch.Batches)
-    //     {
-    //         std::cout << "\tMaterial Type: " << batch.materialType << ", Total Area: " << batch.totalArea << std::endl;
-    //         for (const auto &part : batch.parts)
-    //         {
-    //             std::cout << "\t\tPart Type: " << part.PartTypeId << ", Area: " << part.Area << std::endl;
-    //         }
-    //     }
-    // }
+    auto firstResult = calculateTotalPenalty(machineBatches, finishTime);
+    printInitialSolutionResult(firstResult);
+
+    
 }
 
 int main()
