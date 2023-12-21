@@ -7,6 +7,9 @@
 #include <set>
 #include <unordered_set>
 #include <utility>
+#include <windows.h>
+#include <string>
+
 
 
 using json = nlohmann::json;
@@ -23,7 +26,7 @@ struct PartType
 
 struct OrderDetail
 {
-    PartType *PartType;
+    PartType* PartType;
     int Quantity;
     int Material;
     int Quality;
@@ -59,7 +62,7 @@ struct Machine
 struct PartTypeOrderInfo
 {
     int Material;
-    PartType *PartType;
+    PartType* PartType;
     OrderInfo OrderInfo;
 };
 
@@ -84,14 +87,14 @@ struct MachineBatch
     std::vector<DelayedBatchInfo> DelayedBatchInfo;
 };
 
-bool compareMachines(const std::pair<int, Machine> &a, const std::pair<int, Machine> &b)
+bool compareMachines(const std::pair<int, Machine>& a, const std::pair<int, Machine>& b)
 {
     double totalTimeA = a.second.ScanTime + a.second.RecoatTime;
     double totalTimeB = b.second.ScanTime + b.second.RecoatTime;
     return totalTimeA < totalTimeB;
 }
 
-std::vector<std::pair<int, Machine>> sortMachines(const std::map<int, Machine> &machines)
+std::vector<std::pair<int, Machine>> sortMachines(const std::map<int, Machine>& machines)
 {
     // 复制 machines map 到一个向量进行排序
     std::vector<std::pair<int, Machine>> machinesVec(machines.begin(), machines.end());
@@ -102,12 +105,12 @@ std::vector<std::pair<int, Machine>> sortMachines(const std::map<int, Machine> &
     return machinesVec;
 }
 
-bool orderDetailComparator(const OrderDetail &a, const OrderDetail &b, const std::map<int, Order> &orders, const std::map<int, PartType> &partTypes)
+bool orderDetailComparator(const OrderDetail& a, const OrderDetail& b, const std::map<int, Order>& orders, const std::map<int, PartType>& partTypes)
 {
-    const Order &orderA = orders.at(a.OrderId);
-    const Order &orderB = orders.at(b.OrderId);
-    const PartType &partA = *a.PartType;
-    const PartType &partB = *b.PartType;
+    const Order& orderA = orders.at(a.OrderId);
+    const Order& orderB = orders.at(b.OrderId);
+    const PartType& partA = *a.PartType;
+    const PartType& partB = *b.PartType;
 
     // 首先根据 DueDate 排序
     if (orderA.DueDate != orderB.DueDate)
@@ -124,21 +127,21 @@ bool orderDetailComparator(const OrderDetail &a, const OrderDetail &b, const std
 }
 
 std::map<int, std::vector<OrderDetail>> sortMaterialClassifiedOrderDetails(
-    const std::map<int, std::vector<OrderDetail>> &materialClassifiedOrderDetails,
-    const std::map<int, Order> &orders,
-    const std::map<int, PartType> &partTypes)
+    const std::map<int, std::vector<OrderDetail>>& materialClassifiedOrderDetails,
+    const std::map<int, Order>& orders,
+    const std::map<int, PartType>& partTypes)
 {
     std::map<int, std::vector<OrderDetail>> sortedMaterialOrderDetails;
 
-    for (const auto &entry : materialClassifiedOrderDetails)
+    for (const auto& entry : materialClassifiedOrderDetails)
     {
         auto sortedOrderDetails = entry.second;
 
         std::sort(sortedOrderDetails.begin(), sortedOrderDetails.end(),
-                  [&](const OrderDetail &a, const OrderDetail &b)
-                  {
-                      return orderDetailComparator(a, b, orders, partTypes);
-                  });
+            [&](const OrderDetail& a, const OrderDetail& b)
+            {
+                return orderDetailComparator(a, b, orders, partTypes);
+            });
 
         sortedMaterialOrderDetails[entry.first] = sortedOrderDetails;
     }
@@ -147,31 +150,31 @@ std::map<int, std::vector<OrderDetail>> sortMaterialClassifiedOrderDetails(
 }
 
 std::map<int, std::vector<PartTypeOrderInfo>> generateFinalSortedPartTypes(
-    const std::map<int, std::vector<OrderDetail>> &sortedMaterialOrderDetails,
-    const std::map<int, Order> &orders,
-    const std::map<int, PartType> &partTypes)
+    const std::map<int, std::vector<OrderDetail>>& sortedMaterialOrderDetails,
+    const std::map<int, Order>& orders,
+    const std::map<int, PartType>& partTypes)
 {
     std::map<int, std::vector<PartTypeOrderInfo>> finalInfoByMaterial;
 
     // 從每個 Material 類型中收集所有 OrderDetail
-    for (const auto &materialEntry : sortedMaterialOrderDetails)
+    for (const auto& materialEntry : sortedMaterialOrderDetails)
     {
         std::vector<OrderDetail> allOrderDetails = materialEntry.second;
 
         // 根據自定義比較器進行排序
         std::sort(allOrderDetails.begin(), allOrderDetails.end(),
-                  [&](const OrderDetail &a, const OrderDetail &b)
-                  {
-                      return orderDetailComparator(a, b, orders, partTypes);
-                  });
+            [&](const OrderDetail& a, const OrderDetail& b)
+            {
+                return orderDetailComparator(a, b, orders, partTypes);
+            });
 
         // 遍歷排序後的 OrderDetail
-        for (const auto &detail : allOrderDetails)
+        for (const auto& detail : allOrderDetails)
         {
             PartTypeOrderInfo info;
             info.PartType = detail.PartType; // 假設 OrderDetail 中有 PartTypeId
             info.Material = detail.Material; // 假設 OrderDetail 中有 MaterialId
-            const Order &order = orders.at(detail.OrderId);
+            const Order& order = orders.at(detail.OrderId);
 
             // 创建 OrderInfo 并填充数据
             OrderInfo orderInfo;
@@ -191,9 +194,9 @@ std::map<int, std::vector<PartTypeOrderInfo>> generateFinalSortedPartTypes(
 
     return finalInfoByMaterial;
 }
-bool allMaterialsProcessed(const std::map<int, std::vector<PartTypeOrderInfo>> &sortedMaterials)
+bool allMaterialsProcessed(const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials)
 {
-    for (const auto &materialEntry : sortedMaterials)
+    for (const auto& materialEntry : sortedMaterials)
     {
         if (!materialEntry.second.empty())
         {
@@ -204,16 +207,16 @@ bool allMaterialsProcessed(const std::map<int, std::vector<PartTypeOrderInfo>> &
     return true;
 }
 
-int selectMaterial(const std::map<int, std::vector<PartTypeOrderInfo>> &remainingMaterials)
+int selectMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials)
 {
     int selectedMaterial = -1;
     double earliestDueDate = std::numeric_limits<double>::max();
     double lowestPenaltyCost = std::numeric_limits<double>::max();
     double smallestVolume = std::numeric_limits<double>::max();
 
-    for (const auto &materialEntry : remainingMaterials)
+    for (const auto& materialEntry : remainingMaterials)
     {
-        for (const auto &partInfo : materialEntry.second)
+        for (const auto& partInfo : materialEntry.second)
         {
             if (partInfo.OrderInfo.DueDate < earliestDueDate ||
                 (partInfo.OrderInfo.DueDate == earliestDueDate && partInfo.OrderInfo.PenaltyCost < lowestPenaltyCost) ||
@@ -230,12 +233,12 @@ int selectMaterial(const std::map<int, std::vector<PartTypeOrderInfo>> &remainin
 
     return selectedMaterial;
 }
-int selectMachineWithLeastRunningTime(const std::vector<MachineBatch> &machineBatches)
+int selectMachineWithLeastRunningTime(const std::vector<MachineBatch>& machineBatches)
 {
     int selectedMachineId = -1;
     double leastRunningTime = std::numeric_limits<double>::max();
 
-    for (const auto &machineBatch : machineBatches)
+    for (const auto& machineBatch : machineBatches)
     {
         if (machineBatch.RunningTime < leastRunningTime)
         {
@@ -247,14 +250,14 @@ int selectMachineWithLeastRunningTime(const std::vector<MachineBatch> &machineBa
     return selectedMachineId;
 }
 
-double calculateFinishTime(const Batch &batch, const int &machineId, const std::vector<std::pair<int, Machine>> &sortedMachines)
+double calculateFinishTime(const Batch& batch, const int& machineId, const std::vector<std::pair<int, Machine>>& sortedMachines)
 {
     double volumeTime = 0.0;
     double maxHeight = 0.0;
 
     // 找到對應的機器
-    const Machine *machine = nullptr;
-    for (const auto &machinePair : sortedMachines)
+    const Machine* machine = nullptr;
+    for (const auto& machinePair : sortedMachines)
     {
         if (machinePair.first == machineId)
         {
@@ -268,7 +271,7 @@ double calculateFinishTime(const Batch &batch, const int &machineId, const std::
         throw std::runtime_error("Machine with the specified ID not found.");
     }
 
-    for (const auto &partInfo : batch.parts)
+    for (const auto& partInfo : batch.parts)
     {
         volumeTime += partInfo.PartType->Volume * machine->ScanTime;
         maxHeight = std::max(maxHeight, partInfo.PartType->Height);
@@ -278,7 +281,7 @@ double calculateFinishTime(const Batch &batch, const int &machineId, const std::
 
     return std::max(volumeTime, heightTime);
 }
-Batch allocateMaterialToMachine(MachineBatch &selectedMachineBatch, int selectedMaterial, std::map<int, std::vector<PartTypeOrderInfo>> &remainingMaterials)
+Batch allocateMaterialToMachine(MachineBatch& selectedMachineBatch, int selectedMaterial, std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials)
 {
     Batch newBatch;
     newBatch.materialType = selectedMaterial;
@@ -286,7 +289,7 @@ Batch allocateMaterialToMachine(MachineBatch &selectedMachineBatch, int selected
 
     if (remainingMaterials.find(selectedMaterial) != remainingMaterials.end())
     {
-        auto &materialList = remainingMaterials[selectedMaterial];
+        auto& materialList = remainingMaterials[selectedMaterial];
         auto it = materialList.begin();
         while (it != materialList.end())
         {
@@ -307,7 +310,7 @@ Batch allocateMaterialToMachine(MachineBatch &selectedMachineBatch, int selected
     return newBatch;
 }
 
-void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>> &remainingMaterials, int selectedMaterialType)
+void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials, int selectedMaterialType)
 {
     // 檢查選定的材料類型是否存在於 remainingMaterials 中
     if (remainingMaterials.find(selectedMaterialType) != remainingMaterials.end())
@@ -321,19 +324,19 @@ void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>> &rem
     }
 }
 
-int selectEarliestMaterial(const std::map<int, std::vector<PartTypeOrderInfo>> &sortedMaterials)
+int selectEarliestMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials)
 {
     int selectedMaterial = -1;
     double earliestDueDate = std::numeric_limits<double>::max();
     double highestPenaltyCost = -std::numeric_limits<double>::max();
     double largestArea = -std::numeric_limits<double>::max();
 
-    for (const auto &materialEntry : sortedMaterials)
+    for (const auto& materialEntry : sortedMaterials)
     {
         if (!materialEntry.second.empty())
         {
-            const auto &orderInfo = materialEntry.second.front().OrderInfo;
-            const auto &partType = materialEntry.second.front().PartType;
+            const auto& orderInfo = materialEntry.second.front().OrderInfo;
+            const auto& partType = materialEntry.second.front().PartType;
             if (orderInfo.DueDate < earliestDueDate ||
                 (orderInfo.DueDate == earliestDueDate && orderInfo.PenaltyCost > highestPenaltyCost) ||
                 (orderInfo.DueDate == earliestDueDate && orderInfo.PenaltyCost == highestPenaltyCost && partType->Area > largestArea))
@@ -349,9 +352,9 @@ int selectEarliestMaterial(const std::map<int, std::vector<PartTypeOrderInfo>> &
     return selectedMaterial;
 }
 
-void initializeMachines(std::vector<MachineBatch> &machineBatches, const std::vector<std::pair<int, Machine>> &sortedMachines, int selectedMaterial, const std::map<int, std::vector<PartTypeOrderInfo>> &sortedMaterials)
+void initializeMachines(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines, int selectedMaterial, const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials)
 {
-    for (const auto &machinePair : sortedMachines)
+    for (const auto& machinePair : sortedMachines)
     {
         MachineBatch machineBatch;
         machineBatch.MachineId = machinePair.first;
@@ -364,9 +367,9 @@ void initializeMachines(std::vector<MachineBatch> &machineBatches, const std::ve
     }
 }
 
-MachineBatch &findMachineBatchById(std::vector<MachineBatch> &machineBatches, int machineId)
+MachineBatch& findMachineBatchById(std::vector<MachineBatch>& machineBatches, int machineId)
 {
-    for (auto &machineBatch : machineBatches)
+    for (auto& machineBatch : machineBatches)
     {
         if (machineBatch.MachineId == machineId)
         {
@@ -376,11 +379,11 @@ MachineBatch &findMachineBatchById(std::vector<MachineBatch> &machineBatches, in
 
     throw std::runtime_error("MachineBatch with the specified ID not found.");
 }
-double calculateWeightedDelay(const Batch &batch, double runningTime)
+double calculateWeightedDelay(const Batch& batch, double runningTime)
 {
     double weightedDelay = 0.0;
 
-    for (const auto &partInfo : batch.parts)
+    for (const auto& partInfo : batch.parts)
     {
         double delayTime = runningTime - partInfo.OrderInfo.DueDate;
         if (delayTime > 0)
@@ -394,15 +397,15 @@ double calculateWeightedDelay(const Batch &batch, double runningTime)
 }
 
 std::vector<MachineBatch> createMachineBatches(
-    const std::map<int, std::vector<PartTypeOrderInfo>> &sortedMaterials,
-    const std::vector<std::pair<int, Machine>> &sortedMachines)
+    const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials,
+    const std::vector<std::pair<int, Machine>>& sortedMachines)
 {
     std::vector<MachineBatch> machineBatches;
     std::map<int, int> lastMaterialForMachine;
 
     // 初始化機器
     std::cout << "Initializing machines...\n";
-    for (const auto &machinePair : sortedMachines)
+    for (const auto& machinePair : sortedMachines)
     {
         MachineBatch machineBatch;
         machineBatch.MachineId = machinePair.first;
@@ -423,20 +426,20 @@ std::vector<MachineBatch> createMachineBatches(
 
         // 選擇運行時間最短的機器
         int selectedMachineId = selectMachineWithLeastRunningTime(machineBatches);
-        auto &selectedMachineBatch = findMachineBatchById(machineBatches, selectedMachineId);
+        auto& selectedMachineBatch = findMachineBatchById(machineBatches, selectedMachineId);
         if (lastMaterialForMachine[selectedMachineId] != selectedMaterial)
         {
 
             const auto machineIt = std::find_if(sortedMachines.begin(), sortedMachines.end(),
-                                                [selectedMachineId](const std::pair<int, Machine> &machinePair)
-                                                {
-                                                    return machinePair.first == selectedMachineId;
-                                                });
+                [selectedMachineId](const std::pair<int, Machine>& machinePair)
+                {
+                    return machinePair.first == selectedMachineId;
+                });
 
             if (machineIt != sortedMachines.end())
             {
                 double setupTimeSum = std::accumulate(machineIt->second.MaterialSetup[selectedMaterial].begin(),
-                                                      machineIt->second.MaterialSetup[selectedMaterial].end(), 0.0);
+                    machineIt->second.MaterialSetup[selectedMaterial].end(), 0.0);
                 selectedMachineBatch.RunningTime += setupTimeSum;
             }
         }
@@ -463,7 +466,7 @@ std::vector<MachineBatch> createMachineBatches(
 void printMachineBatch(const std::vector<MachineBatch> MachineBatchs)
 {
 
-    for (const auto &machineBatch : MachineBatchs)
+    for (const auto& machineBatch : MachineBatchs)
     {
         std::cout << "Machine ID: " << machineBatch.MachineId << "\n";
         std::cout << "Machine Area: " << machineBatch.MachineArea << "\n";
@@ -471,12 +474,12 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs)
         std::cout << "Total Weighted Delay: " << machineBatch.TotalWeightedDelay << "\n";
         std::cout << "Batches:\n";
 
-        for (const auto &batch : machineBatch.Batches)
+        for (const auto& batch : machineBatch.Batches)
         {
             std::cout << "  Batch Material Type: " << batch.materialType << "\n";
             std::cout << "  Batch Total Area: " << batch.totalArea << "\n";
             std::cout << "  Parts:\n";
-            for (const auto &part : batch.parts)
+            for (const auto& part : batch.parts)
             {
                 std::cout << "    Part Type ID: " << part.PartType->PartTypeId << "\n";
                 std::cout << "    Order ID: " << part.OrderInfo.OrderId << "\n";
@@ -484,7 +487,7 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs)
         }
 
         std::cout << "Delayed Batches:\n";
-        for (const auto &delayedBatch : machineBatch.DelayedBatchInfo)
+        for (const auto& delayedBatch : machineBatch.DelayedBatchInfo)
         {
             std::cout << "  Batch Index: " << delayedBatch.BatchIndex << "\n";
             std::cout << "  Weighted Delay: " << delayedBatch.WeightedDelay << "\n";
@@ -492,17 +495,17 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs)
     }
 }
 
-double sumTotalWeightedDelay(const std::vector<MachineBatch> &machineBatches)
+double sumTotalWeightedDelay(const std::vector<MachineBatch>& machineBatches)
 {
     double total = 0.0;
-    for (const auto &batch : machineBatches)
+    for (const auto& batch : machineBatches)
     {
         total += batch.TotalWeightedDelay;
     }
     return total;
 }
 
-void read_json(const std::string &file_path)
+void read_json(const std::string& file_path)
 {
     std::ifstream file(file_path);
     json j;
@@ -521,7 +524,7 @@ void read_json(const std::string &file_path)
 
     // 解析 Machines 部分
     std::map<int, Machine> machines;
-    for (auto &kv : j["Machines"].items())
+    for (auto& kv : j["Machines"].items())
     {
         int key = std::stoi(kv.key());
         json value = kv.value();
@@ -531,11 +534,11 @@ void read_json(const std::string &file_path)
         m.Height = value["Height"];
         m.Length = value["Length"];
         m.Width = value["Width"];
-        for (auto &material : value["Materials"])
+        for (auto& material : value["Materials"])
         {
             m.Materials.push_back(material);
         }
-        for (auto &setup : value["MaterialSetup"])
+        for (auto& setup : value["MaterialSetup"])
         {
             m.MaterialSetup.push_back(setup.get<std::vector<double>>());
         }
@@ -552,7 +555,7 @@ void read_json(const std::string &file_path)
 
     // 解析 PartTypes 部分
     std::map<int, PartType> partTypes;
-    for (auto &kv : j["PartTypes"].items())
+    for (auto& kv : j["PartTypes"].items())
     {
         int key = std::stoi(kv.key());
         json value = kv.value();
@@ -568,7 +571,7 @@ void read_json(const std::string &file_path)
     // 解析 Orders 部分
     std::map<int, Order> orders;
     std::map<int, std::vector<OrderDetail>> materialClassifiedOrderDetails;
-    for (auto &kv : j["Orders"].items())
+    for (auto& kv : j["Orders"].items())
     {
         int key = std::stoi(kv.key());
         json value = kv.value();
@@ -577,7 +580,7 @@ void read_json(const std::string &file_path)
         o.DueDate = value["DueDate"];
         o.ReleaseDate = value["ReleaseDate"];
         o.PenaltyCost = value["PenaltyCost"];
-        for (auto &detailValue : value["OrderList"])
+        for (auto& detailValue : value["OrderList"])
         {
             OrderDetail od;
             int partTypeId = detailValue["PartType"];
@@ -607,12 +610,22 @@ void read_json(const std::string &file_path)
     std::cout << "  初始解 : " << result << "\n";
 }
 
-int main()
-{
-    std::vector<std::string> files = {"test.json","tasks.json"};
-    for (const auto &file : files)
-    {
-        read_json(file);
+
+int main() {
+    WIN32_FIND_DATAA findFileData; 
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/.vscode/test/*.json", &findFileData); // Use the ANSI version
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        std::cerr << "FindFirstFile failed\n";
+        return 1;
+    } else {
+        do {
+            std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + std::string(findFileData.cFileName);
+            std::cout << "  檔案 : " << fullPath << "\n";
+            read_json(fullPath);
+        } while (FindNextFileA(hFind, &findFileData) != 0); // Use the ANSI version
+        FindClose(hFind);
     }
+    
     return 0;
 }
