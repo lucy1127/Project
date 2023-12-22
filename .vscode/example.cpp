@@ -463,34 +463,33 @@ std::vector<MachineBatch> createMachineBatches(
     return machineBatches;
 }
 
-void printMachineBatch(const std::vector<MachineBatch> MachineBatchs)
+void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstream& outFile)
 {
-
     for (const auto& machineBatch : MachineBatchs)
     {
-        std::cout << "Machine ID: " << machineBatch.MachineId << "\n";
-        std::cout << "Machine Area: " << machineBatch.MachineArea << "\n";
-        std::cout << "Running Time: " << machineBatch.RunningTime << "\n";
-        std::cout << "Total Weighted Delay: " << machineBatch.TotalWeightedDelay << "\n";
-        std::cout << "Batches:\n";
+        outFile << "Machine ID: " << machineBatch.MachineId << "\n";
+        outFile << "Machine Area: " << machineBatch.MachineArea << "\n";
+        outFile << "Running Time: " << machineBatch.RunningTime << "\n";
+        outFile << "Total Weighted Delay: " << machineBatch.TotalWeightedDelay << "\n";
+        outFile << "Batches:\n";
 
         for (const auto& batch : machineBatch.Batches)
         {
-            std::cout << "  Batch Material Type: " << batch.materialType << "\n";
-            std::cout << "  Batch Total Area: " << batch.totalArea << "\n";
-            std::cout << "  Parts:\n";
+            outFile << "  Batch Material Type: " << batch.materialType << "\n";
+            outFile << "  Batch Total Area: " << batch.totalArea << "\n";
+            outFile << "  Parts:\n";
             for (const auto& part : batch.parts)
             {
-                std::cout << "    Part Type ID: " << part.PartType->PartTypeId << "\n";
-                std::cout << "    Order ID: " << part.OrderInfo.OrderId << "\n";
+                outFile << "    Part Type ID: " << part.PartType->PartTypeId << "\n";
+                outFile << "    Order ID: " << part.OrderInfo.OrderId << "\n";
             }
         }
 
-        std::cout << "Delayed Batches:\n";
+        outFile << "Delayed Batches:\n";
         for (const auto& delayedBatch : machineBatch.DelayedBatchInfo)
         {
-            std::cout << "  Batch Index: " << delayedBatch.BatchIndex << "\n";
-            std::cout << "  Weighted Delay: " << delayedBatch.WeightedDelay << "\n";
+            outFile << "  Batch Index: " << delayedBatch.BatchIndex << "\n";
+            outFile << "  Weighted Delay: " << delayedBatch.WeightedDelay << "\n";
         }
     }
 }
@@ -505,7 +504,7 @@ double sumTotalWeightedDelay(const std::vector<MachineBatch>& machineBatches)
     return total;
 }
 
-void read_json(const std::string& file_path)
+void read_json(const std::string& file_path, std::ofstream& outFile)
 {
     std::ifstream file(file_path);
     json j;
@@ -602,30 +601,37 @@ void read_json(const std::string& file_path)
 
     auto machineBatches = createMachineBatches(finalSorted, sortedMachines);
 
-    printMachineBatch(machineBatches);
+    printMachineBatch(machineBatches, outFile);
 
 
-    std::cout << "----------------------------------" << "\n";
+    outFile << "----------------------------------" << "\n";
     double result = sumTotalWeightedDelay(machineBatches);
-    std::cout << "  初始解 : " << result << "\n";
+    outFile << "  初始解 : " << result << "\n";
 }
 
 
 int main() {
-    WIN32_FIND_DATAA findFileData; 
-    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/.vscode/test/*.json", &findFileData); // Use the ANSI version
+    WIN32_FIND_DATAA findFileData;
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/.vscode/test/*.json", &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
         return 1;
     } else {
         do {
-            std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + std::string(findFileData.cFileName);
-            std::cout << "  檔案 : " << fullPath << "\n";
-            read_json(fullPath);
-        } while (FindNextFileA(hFind, &findFileData) != 0); // Use the ANSI version
+            std::string jsonFileName = std::string(findFileData.cFileName);
+            std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + jsonFileName;
+
+
+            std::string outputFileName = "output_" + jsonFileName + ".txt";
+            std::ofstream outFile(outputFileName); 
+
+            read_json(fullPath, outFile); 
+
+            outFile.close(); 
+
+        } while (FindNextFileA(hFind, &findFileData) != 0); 
         FindClose(hFind);
     }
-    
     return 0;
 }
