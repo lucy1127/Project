@@ -76,6 +76,7 @@ struct DelayedBatchInfo
 {
     int BatchIndex;
     double WeightedDelay;
+    double thisBatchTime;
 };
 struct MachineBatch
 {
@@ -86,6 +87,12 @@ struct MachineBatch
     std::vector<Batch> Batches;
     std::vector<DelayedBatchInfo> DelayedBatchInfo;
 };
+
+struct DelayedBatch {
+    Batch batch;
+    double time;
+};
+
 
 bool compareMachines(const std::pair<int, Machine>& a, const std::pair<int, Machine>& b)
 {
@@ -194,6 +201,7 @@ std::map<int, std::vector<PartTypeOrderInfo>> generateFinalSortedPartTypes(
 
     return finalInfoByMaterial;
 }
+
 bool allMaterialsProcessed(const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials)
 {
     for (const auto& materialEntry : sortedMaterials)
@@ -233,6 +241,7 @@ int selectMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& remainin
 
     return selectedMaterial;
 }
+
 int selectMachineWithLeastRunningTime(const std::vector<MachineBatch>& machineBatches)
 {
     int selectedMachineId = -1;
@@ -281,6 +290,7 @@ double calculateFinishTime(const Batch& batch, const int& machineId, const std::
 
     return std::max(volumeTime, heightTime);
 }
+
 Batch allocateMaterialToMachine(MachineBatch& selectedMachineBatch, int selectedMaterial, std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials)
 {
     Batch newBatch;
@@ -379,6 +389,8 @@ MachineBatch& findMachineBatchById(std::vector<MachineBatch>& machineBatches, in
 
     throw std::runtime_error("MachineBatch with the specified ID not found.");
 }
+
+
 double calculateWeightedDelay(const Batch& batch, double runningTime)
 {
     double weightedDelay = 0.0;
@@ -403,65 +415,198 @@ std::vector<MachineBatch> createMachineBatches(
     std::vector<MachineBatch> machineBatches;
     std::map<int, int> lastMaterialForMachine;
 
-    // 初始化機器
+    // Initialize machines
     std::cout << "Initializing machines...\n";
     for (const auto& machinePair : sortedMachines)
     {
-        MachineBatch machineBatch;
-        machineBatch.MachineId = machinePair.first;
-        machineBatch.MachineArea = machinePair.second.Area;
-        machineBatch.RunningTime = 0.0;
-        machineBatch.TotalWeightedDelay = 0.0;
-        machineBatches.push_back(machineBatch);
-        std::cout << "Initialized machine ID: " << machineBatch.MachineId << " with Area: " << machineBatch.MachineArea << "\n";
+        machineBatches.emplace_back(MachineBatch{
+            machinePair.first,
+            machinePair.second.Area,
+            0.0, // RunningTime
+            0.0  // TotalWeightedDelay
+            });
+
+        std::cout << "Initialized machine ID: " << machinePair.first << " with Area: " << machinePair.second.Area << "\n";
     }
 
     auto remainingMaterials = sortedMaterials;
 
-    // 當還有材料需要處理時進行迴圈
     while (!remainingMaterials.empty())
     {
-        // 選擇具有最早 DueDate 的材料
         int selectedMaterial = selectEarliestMaterial(remainingMaterials);
+        std::cout << "selectedMaterial : " << selectedMaterial << std::endl;
 
-        // 選擇運行時間最短的機器
         int selectedMachineId = selectMachineWithLeastRunningTime(machineBatches);
-        auto& selectedMachineBatch = findMachineBatchById(machineBatches, selectedMachineId);
-        if (lastMaterialForMachine[selectedMachineId] != selectedMaterial)
-        {
+        MachineBatch& machineBatchRef = findMachineBatchById(machineBatches, selectedMachineId);
 
-            const auto machineIt = std::find_if(sortedMachines.begin(), sortedMachines.end(),
-                [selectedMachineId](const std::pair<int, Machine>& machinePair)
-                {
-                    return machinePair.first == selectedMachineId;
-                });
+        auto machineIt = std::find_if(sortedMachines.begin(), sortedMachines.end(),
+            [selectedMachineId](const std::pair<int, Machine>& element)
+            { return element.second.MachineId == selectedMachineId; });
 
-            if (machineIt != sortedMachines.end())
-            {
-                double setupTimeSum = std::accumulate(machineIt->second.MaterialSetup[selectedMaterial].begin(),
-                    machineIt->second.MaterialSetup[selectedMaterial].end(), 0.0);
-                selectedMachineBatch.RunningTime += setupTimeSum;
+        double setUpTime = 0.0;
+
+        if (machineIt != sortedMachines.end()) {
+            if (lastMaterialForMachine.find(selectedMachineId) == lastMaterialForMachine.end() ||
+                lastMaterialForMachine[selectedMachineId] != selectedMaterial) {
+
+                setUpTime = (lastMaterialForMachine.find(selectedMachineId) == lastMaterialForMachine.end()) ?
+                    machineIt->second.StartSetup[selectedMaterial] :
+                    std::accumulate(machineIt->second.MaterialSetup[selectedMaterial].begin(),
+                        machineIt->second.MaterialSetup[selectedMaterial].end(),
+                        0.0);
+
+                lastMaterialForMachine[selectedMachineId] = selectedMaterial;
             }
-        }
-        // 分配材料到機器
-        Batch newBatch = allocateMaterialToMachine(selectedMachineBatch, selectedMaterial, remainingMaterials);
-        double finishTime = calculateFinishTime(newBatch, selectedMachineBatch.MachineId, sortedMachines);
-        selectedMachineBatch.RunningTime += finishTime;
-        selectedMachineBatch.Batches.push_back(newBatch);
-        // 計算延遲
-        DelayedBatchInfo delayedInfo;
-        delayedInfo.BatchIndex = selectedMachineBatch.Batches.size();
-        delayedInfo.WeightedDelay = calculateWeightedDelay(newBatch, selectedMachineBatch.RunningTime);
-        selectedMachineBatch.DelayedBatchInfo.push_back(delayedInfo);
-        selectedMachineBatch.TotalWeightedDelay += delayedInfo.WeightedDelay;
 
-        // 更新材料狀態
+            std::cout << "Machine first SetUp: " << machineIt->second.StartSetup[selectedMaterial] << std::endl;
+            std::cout << "Machine Total MaterialSetUP: " << std::accumulate(machineIt->second.MaterialSetup[selectedMaterial].begin(),
+                machineIt->second.MaterialSetup[selectedMaterial].end(),
+                0.0) << std::endl;
+            std::cout << "Different Material: " << std::endl;
+            std::cout << "setUpTime: " << setUpTime << " for machine ID: " << selectedMachineId << std::endl;
+            std::cout << "----------------------------------------------------------------------------- " << std::endl;
+
+            machineBatchRef.RunningTime += setUpTime;
+        }
+
+        Batch newBatch = allocateMaterialToMachine(machineBatchRef, selectedMaterial, remainingMaterials);
+        double finishTime = calculateFinishTime(newBatch, machineBatchRef.MachineId, sortedMachines);
+        machineBatchRef.RunningTime += finishTime;
+        std::cout << "----------------------------------------------------------------------------- " << std::endl;
+        std::cout << "Machine: " << selectedMachineId << std::endl;
+        std::cout << "BatchfinishTime: " << finishTime << std::endl;
+        std::cout << "RunningTime: " << machineBatchRef.RunningTime << std::endl;
+        std::cout << "----------------------------------------------------------------------------- " << std::endl;
+        machineBatchRef.Batches.push_back(newBatch);
+
+        DelayedBatchInfo delayedInfo{
+            static_cast<int>(machineBatchRef.Batches.size()),
+            calculateWeightedDelay(newBatch, machineBatchRef.RunningTime),
+            machineBatchRef.RunningTime
+        };
+
+        machineBatchRef.DelayedBatchInfo.push_back(delayedInfo);
+        machineBatchRef.TotalWeightedDelay += delayedInfo.WeightedDelay;
+
         updateRemainingMaterials(remainingMaterials, selectedMaterial);
         lastMaterialForMachine[selectedMachineId] = selectedMaterial;
     }
 
     return machineBatches;
 }
+
+// 函数以抽取并返回所有延迟的批次
+std::vector<DelayedBatch> extractDelayedBatches(std::vector<MachineBatch>& machineBatches) {
+    std::vector<DelayedBatch> delayedBatches;
+
+    for (auto& machineBatch : machineBatches) {
+        // 逆序遍历，从最后一个延迟批次开始
+        for (int i = machineBatch.DelayedBatchInfo.size() - 1; i >= 0; i--) {
+            const auto& delayedInfo = machineBatch.DelayedBatchInfo[i];
+            if (delayedInfo.WeightedDelay > 0) {  // 如果该批次延迟
+                DelayedBatch delayedBatch;
+                delayedBatch.batch = machineBatch.Batches[delayedInfo.BatchIndex - 1]; // BatchIndex 是从 1 开始的
+                delayedBatch.time = machineBatch.DelayedBatchInfo[delayedInfo.BatchIndex - 1].thisBatchTime;
+                delayedBatches.push_back(delayedBatch);
+
+                // 从原始机器批次中移除该批次
+                machineBatch.Batches.erase(machineBatch.Batches.begin() + delayedInfo.BatchIndex - 1);
+            }
+        }
+    }
+    return delayedBatches;
+}
+
+
+// 更新 MachineBatch 数据
+void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+
+    machineBatch.RunningTime = 0;
+    machineBatch.TotalWeightedDelay = 0;
+
+    for (const auto& batch : machineBatch.Batches) {
+        double finishTime = calculateFinishTime(batch, machineBatch.MachineId, sortedMachines);
+        machineBatch.RunningTime += finishTime;
+        double batchDelay = calculateWeightedDelay(batch, machineBatch.RunningTime);
+        machineBatch.TotalWeightedDelay += batchDelay;
+    }
+
+    machineBatch.DelayedBatchInfo.clear();
+
+}
+
+
+bool compareDelayedBatches(const DelayedBatch& a, const DelayedBatch& b) {
+    const auto& partA = a.batch.parts.front().OrderInfo;
+    const auto& partB = b.batch.parts.front().OrderInfo;
+
+    const auto& AreaA = a.batch.parts.front().PartType->Area;
+    const auto& AreaB = b.batch.parts.front().PartType->Area;
+
+    if (partA.DueDate != partB.DueDate)
+        return partA.DueDate < partB.DueDate;
+    if (partA.PenaltyCost != partB.PenaltyCost)
+        return partA.PenaltyCost > partB.PenaltyCost;
+    return AreaA > AreaB;
+}
+
+// 尝试将延迟批次插入到机器批次中，并返回新的总延迟
+double tryInsertBatch(MachineBatch& machineBatch, const Batch& batchToInsert, int position, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    // 假设我们有一个函数来计算批次完成时间
+    auto finishTime = calculateFinishTime(batchToInsert, machineBatch.MachineId, sortedMachines);
+
+    // 插入批次
+    machineBatch.Batches.insert(machineBatch.Batches.begin() + position, batchToInsert);
+
+    // 计算新的总延迟
+    double newTotalDelay = 0.0;
+    for (const auto& batch : machineBatch.Batches) {
+        newTotalDelay += calculateWeightedDelay(batch, machineBatch.RunningTime);
+        machineBatch.RunningTime += finishTime; // 假设finishTime已经计算
+    }
+
+    // 移除插入的批次，因为我们只是在测试插入的效果
+    machineBatch.Batches.erase(machineBatch.Batches.begin() + position);
+
+    return newTotalDelay;
+}
+
+void reintegrateDelayedBatches(std::vector<MachineBatch>& machineBatches, std::vector<DelayedBatch>& delayedBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    // 按照定义的准则对延迟批次进行排序
+    std::sort(delayedBatches.begin(), delayedBatches.end(), compareDelayedBatches);
+
+    // 处理每个延迟批次
+    for (auto& delayedBatch : delayedBatches) {
+        double bestAdditionalDelay = std::numeric_limits<double>::max();
+        MachineBatch* bestMachineBatch = nullptr;
+        int bestPosition = -1;
+
+        // 尝试在每个机器上找到最佳插入点
+        for (auto& machineBatch : machineBatches) {
+            for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
+                double trialDelay = tryInsertBatch(machineBatch, delayedBatch.batch, i, sortedMachines);
+                double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
+
+                if (additionalDelay < bestAdditionalDelay) {
+                    bestAdditionalDelay = additionalDelay;
+                    bestMachineBatch = &machineBatch;
+                    bestPosition = i;
+                }
+            }
+        }
+
+        // 如果找到了最佳位置，将批次插入到机器批次中
+        if (bestMachineBatch && bestPosition >= 0) {
+            bestMachineBatch->Batches.insert(bestMachineBatch->Batches.begin() + bestPosition, delayedBatch.batch);
+            // 更新机器的总延迟和运行时间
+            bestMachineBatch->TotalWeightedDelay += bestAdditionalDelay;
+
+            // 正确调用 updateMachineBatches，传递*bestMachineBatch和sortedMachines
+            updateMachineBatches(*bestMachineBatch, sortedMachines);
+        }
+    }
+}
+
 
 void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstream& outFile)
 {
@@ -490,7 +635,10 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstr
         {
             outFile << "  Batch Index: " << delayedBatch.BatchIndex << "\n";
             outFile << "  Weighted Delay: " << delayedBatch.WeightedDelay << "\n";
+            outFile << "  Batch Time : " << delayedBatch.thisBatchTime << "\n";
         }
+
+        outFile << "*******************************************" << "\n";
     }
 }
 
@@ -504,6 +652,20 @@ double sumTotalWeightedDelay(const std::vector<MachineBatch>& machineBatches)
     return total;
 }
 
+
+void printDelayedBatches(const std::vector<DelayedBatch>& delayedBatches, std::ofstream& outFile) {
+    outFile << "Delayed Batches:\n";
+    for (const auto& delayedBatch : delayedBatches) {
+        outFile << "Batch Material Type: " << delayedBatch.batch.materialType << "\n";
+        outFile << "Batch Total Area: " << delayedBatch.batch.totalArea << "\n";
+        outFile << "Batch TIme: " << delayedBatch.time << "\n";
+        outFile << "Parts:\n";
+        for (const auto& part : delayedBatch.batch.parts) {
+            outFile << "  Part Type ID: " << part.PartType->PartTypeId << "\n";
+            outFile << "  Order ID: " << part.OrderInfo.OrderId << "\n";
+        }
+    }
+}
 void read_json(const std::string& file_path, std::ofstream& outFile)
 {
     std::ifstream file(file_path);
@@ -597,7 +759,6 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
     auto sortedMaterials = sortMaterialClassifiedOrderDetails(materialClassifiedOrderDetails, orders, partTypes);
 
     auto finalSorted = generateFinalSortedPartTypes(sortedMaterials, orders, partTypes);
-    // printFinalSorted(finalSorted);
 
     auto machineBatches = createMachineBatches(finalSorted, sortedMachines);
 
@@ -606,7 +767,43 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
 
     outFile << "----------------------------------" << "\n";
     double result = sumTotalWeightedDelay(machineBatches);
-    outFile << "  初始解 : " << result << "\n";
+    outFile << "  初始解 : " << result << "\n"; //step 6.
+    outFile << "----------------------------------" << "\n";
+
+
+
+    std::vector<DelayedBatch> delayedBatches = extractDelayedBatches(machineBatches);
+    printDelayedBatches(delayedBatches, outFile);
+    // 更新每台机器的运行时间和总延迟
+    for (auto& machineBatch : machineBatches) {
+        updateMachineBatches(machineBatch, sortedMachines);
+    }
+    outFile << "----------------------------------" << "\n";
+    printMachineBatch(machineBatches, outFile);
+
+
+    //TODO：把抽取出來的 delayedBatches 重新插入 機台中 
+    // 1. 先比 DelayedBatch 中 哪個Batch中第一個 的Dudate 最早(小), 一樣就比 pentycost 最大 ,一樣就比Area 最大
+    // 圖例 : <4,5> , <17,18> ,<29,30> // 延遲批次
+    // <29,30> 為最先排序 
+    // 2. <29,30>的  Material Type: 0 ,所以只能插入 在  Batch 為 Material Type: 0 的前後 
+    //所以最下面的圖為 能 插入的批次的可能 
+    //3. 每種可能的機台 重新計算批次延遲時間  
+    //4. 選擇延遲最少的那台 做插入
+    //5. 依照以上步驟完成 delayedBatches 的插入 
+    // (可以參考使用以上寫好的FUNCTION )
+
+    reintegrateDelayedBatches(machineBatches, delayedBatches, sortedMachines);
+    outFile << "----------------------------------" << "\n";
+    outFile << " 插入後 : " << "\n";
+    printMachineBatch(machineBatches, outFile);
+    // outFile << "----------------------------------" << "\n";
+    // double result2 = sumTotalWeightedDelay(machineBatches);
+    // outFile << "  第2次初始解 : " << result2 << "\n"; //step 6.
+    // outFile << "----------------------------------" << "\n";
+
+
+
 }
 
 
@@ -617,20 +814,21 @@ int main() {
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
         return 1;
-    } else {
+    }
+    else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
             std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + jsonFileName;
 
 
             std::string outputFileName = "output_" + jsonFileName + ".txt";
-            std::ofstream outFile(outputFileName); 
+            std::ofstream outFile(outputFileName);
 
-            read_json(fullPath, outFile); 
+            read_json(fullPath, outFile);
 
-            outFile.close(); 
+            outFile.close();
 
-        } while (FindNextFileA(hFind, &findFileData) != 0); 
+        } while (FindNextFileA(hFind, &findFileData) != 0);
         FindClose(hFind);
     }
     return 0;
