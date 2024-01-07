@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <string>
 #include <random>
+#include <iterator> 
 
 
 
@@ -96,6 +97,23 @@ struct DelayedBatch {
     double WeightedDelay;
     double time;
 };
+
+const Machine& findMachineById(const std::vector<std::pair<int, Machine>>& sortedMachines, int machineId) {
+    // 使用 find_if 算法在 sortedMachines 中查找匹配的机器
+    auto it = std::find_if(sortedMachines.begin(), sortedMachines.end(),
+        [machineId](const std::pair<int, Machine>& machinePair) {
+            return machinePair.second.MachineId == machineId;
+        });
+
+    if (it != sortedMachines.end()) {
+        // 如果找到了，返回对应的 Machine 对象
+        return it->second;
+    }
+    else {
+        // 如果没有找到，抛出异常
+        throw std::runtime_error("Machine with ID " + std::to_string(machineId) + " not found.");
+    }
+}
 
 
 bool compareMachines(const std::pair<int, Machine>& a, const std::pair<int, Machine>& b)
@@ -560,15 +578,24 @@ void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pai
         }
     }
 
+    machineBatch.DelayedBatchInfo.clear();
 
     for (const auto& batch : machineBatch.Batches) {
         double finishTime = calculateFinishTime(batch, machineBatch.MachineId, machine);
         machineBatch.RunningTime += finishTime;
         double batchDelay = calculateWeightedDelay(batch, machineBatch.RunningTime);
         machineBatch.TotalWeightedDelay += batchDelay;
+
+        if (batchDelay > 0) {
+            DelayedBatchInfo dbInfo;
+            dbInfo.BatchIndex = &batch - &machineBatch.Batches[0] + 1;  // 计算批次索引
+            dbInfo.WeightedDelay = batchDelay;
+            dbInfo.thisBatchTime = machineBatch.RunningTime;
+            machineBatch.DelayedBatchInfo.push_back(dbInfo);
+        }
     }
 
-    machineBatch.DelayedBatchInfo.clear();
+
 }
 
 
@@ -597,7 +624,6 @@ double tryInsertBatch(MachineBatch& machineBatch, const Batch& batchToInsert, in
     int lastMaterial = -1;
     for (size_t i = 0; i < tempMachineBatch.Batches.size(); ++i) {
         const Batch& currentBatch = tempMachineBatch.Batches[i];
-
         const Machine* machine = nullptr;
         for (const auto& machinePair : sortedMachines) {
             if (machinePair.first == tempMachineBatch.MachineId) {
@@ -628,32 +654,78 @@ double tryInsertBatch(MachineBatch& machineBatch, const Batch& batchToInsert, in
         lastMaterial = currentBatch.materialType;
     }
 
-    return tempMachineBatch.TotalWeightedDelay;
+    return tempMachineBatch.TotalWeightedDelay - machineBatch.TotalWeightedDelay; // 返回额外延迟
 }
-// 辅助函数：插入批次
-void insertBatch(MachineBatch* machineBatch, int position, DelayedBatch& batch, double additionalDelay, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    machineBatch->Batches.insert(machineBatch->Batches.begin() + position, batch.batch);
-    machineBatch->TotalWeightedDelay += additionalDelay;
 
-    updateMachineBatches(*machineBatch, sortedMachines);
-    DelayedBatchInfo dbInfo;
-    dbInfo.BatchIndex = position;
-    dbInfo.WeightedDelay = batch.WeightedDelay;
-    dbInfo.thisBatchTime = additionalDelay;  // 使用传入的额外延迟
-    dbInfo.newPosition = position;
-    machineBatch->DelayedBatchInfo.push_back(dbInfo);
+// 辅助函数：插入批次
+void insertBatch(MachineBatch* machineBatch, int position, DelayedBatch& delayedBatch, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    // 插入新的批次
+    machineBatch->Batches.insert(machineBatch->Batches.begin() + position, delayedBatch.batch);
+
+    // 重新计算机器批次的运行时间和总加权延迟
+    machineBatch->RunningTime = 0.0;
+    machineBatch->TotalWeightedDelay = 0.0;
+    machineBatch->DelayedBatchInfo.clear(); // 清除旧的延迟信息
+
+    int lastMaterial = -1;
+    for (size_t i = 0; i < machineBatch->Batches.size(); ++i) {
+        const Batch& currentBatch = machineBatch->Batches[i];
+
+        // 查找当前批次对应的机器
+        const Machine* machine = nullptr;
+        for (const auto& machinePair : sortedMachines) {
+            if (machinePair.first == machineBatch->MachineId) {
+                machine = &machinePair.second;
+                break;
+            }
+        }
+        if (!machine) {
+            continue; // 如果找不到机器，则跳过
+        }
+
+        // 如果材料类型改变，考虑设置时间
+        if (i == 0 || lastMaterial != currentBatch.materialType) {
+            // 添加材料更换的设置时间
+            if (i == 0) {
+                machineBatch->RunningTime += machine->StartSetup[currentBatch.materialType];
+            }
+            else {
+                machineBatch->RunningTime += std::accumulate(machine->MaterialSetup[currentBatch.materialType].begin(),
+                    machine->MaterialSetup[currentBatch.materialType].end(), 0.0);
+            }
+        }
+
+        // 计算完成时间和延迟
+        double finishTime = calculateFinishTime(currentBatch, machineBatch->MachineId, machine);
+        machineBatch->RunningTime += finishTime;
+        double batchDelay = calculateWeightedDelay(currentBatch, machineBatch->RunningTime);
+        machineBatch->TotalWeightedDelay += batchDelay;
+
+        // 如果存在延迟，则记录在 DelayedBatchInfo 中
+        if (batchDelay > 0) {
+            DelayedBatchInfo dbInfo;
+            dbInfo.BatchIndex = i;
+            dbInfo.WeightedDelay = batchDelay;
+            dbInfo.thisBatchTime = machineBatch->RunningTime;
+            dbInfo.newPosition = position; // 这个可能需要根据您的具体逻辑进行调整
+            machineBatch->DelayedBatchInfo.push_back(dbInfo);
+        }
+
+        lastMaterial = currentBatch.materialType; // 更新材料类型
+    }
 }
+
+
 // 辅助函数：插入最后一个批次
 void insertLastBatch(std::vector<MachineBatch>& machineBatches, DelayedBatch& lastBatch, const std::vector<std::pair<int, Machine>>& sortedMachines) {
     double bestAdditionalDelay = std::numeric_limits<double>::max();
     MachineBatch* bestMachineBatch = nullptr;
     int bestPosition = -1;
 
-    // 寻找最佳插入点
     for (auto& machineBatch : machineBatches) {
         for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
             double trialDelay = tryInsertBatch(machineBatch, lastBatch.batch, i, sortedMachines);
-            double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
+            double additionalDelay = trialDelay;
             if (additionalDelay < bestAdditionalDelay) {
                 bestAdditionalDelay = additionalDelay;
                 bestMachineBatch = &machineBatch;
@@ -662,83 +734,45 @@ void insertLastBatch(std::vector<MachineBatch>& machineBatches, DelayedBatch& la
         }
     }
 
-    // 如果找到最佳位置，则插入批次
     if (bestMachineBatch && bestPosition >= 0) {
-        bestMachineBatch->Batches.insert(bestMachineBatch->Batches.begin() + bestPosition, lastBatch.batch);
-        bestMachineBatch->TotalWeightedDelay += bestAdditionalDelay;
-        updateMachineBatches(*bestMachineBatch, sortedMachines);
-        DelayedBatchInfo dbInfo;
-        dbInfo.BatchIndex = bestPosition;
-        dbInfo.WeightedDelay = lastBatch.WeightedDelay;
-        dbInfo.thisBatchTime = bestAdditionalDelay;  // 使用计算出的最佳额外延迟
-        dbInfo.newPosition = bestPosition;
-        bestMachineBatch->DelayedBatchInfo.push_back(dbInfo);
+        insertBatch(bestMachineBatch, bestPosition, lastBatch, sortedMachines);
     }
 }
+
 void reintegrateDelayedBatches(std::vector<MachineBatch>& machineBatches, std::vector<DelayedBatch>& delayedBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    // 只有在有延迟批次时才进行处理
     while (!delayedBatches.empty()) {
-        // 每次循环开始时对延迟批次进行排序
         std::sort(delayedBatches.begin(), delayedBatches.end(), compareDelayedBatches);
 
-        for (size_t j = 0; j < delayedBatches.size() - 1; ++j) {
-            DelayedBatch& firstBatch = delayedBatches[j];
-            DelayedBatch& secondBatch = delayedBatches[j + 1];
+        for (size_t j = 0; j < delayedBatches.size(); ++j) {
+            DelayedBatch& currentBatch = delayedBatches[j];
 
-            // 寻找两个批次的最佳插入点
-            double bestAdditionalDelay1 = std::numeric_limits<double>::max();
-            double bestAdditionalDelay2 = std::numeric_limits<double>::max();
-            MachineBatch* bestMachineBatch1 = nullptr;
-            MachineBatch* bestMachineBatch2 = nullptr;
-            int bestPosition1 = -1;
-            int bestPosition2 = -1;
+            double bestAdditionalDelay = std::numeric_limits<double>::max();
+            MachineBatch* bestMachineBatch = nullptr;
+            int bestPosition = -1;
 
             // 遍历机器批次以找到最佳插入点
             for (auto& machineBatch : machineBatches) {
                 for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
-                    // 对第一个批次进行测试
-                    if (machineBatch.RunningTime <= firstBatch.time) {
-                        double trialDelay1 = tryInsertBatch(machineBatch, firstBatch.batch, i, sortedMachines);
-                        double additionalDelay1 = trialDelay1 - machineBatch.TotalWeightedDelay;
-                        if (additionalDelay1 < bestAdditionalDelay1) {
-                            bestAdditionalDelay1 = additionalDelay1;
-                            bestMachineBatch1 = &machineBatch;
-                            bestPosition1 = i;
-                        }
-                    }
-                    // 对第二个批次进行测试
-                    if (machineBatch.RunningTime <= secondBatch.time) {
-                        double trialDelay2 = tryInsertBatch(machineBatch, secondBatch.batch, i, sortedMachines);
-                        double additionalDelay2 = trialDelay2 - machineBatch.TotalWeightedDelay;
-                        if (additionalDelay2 < bestAdditionalDelay2) {
-                            bestAdditionalDelay2 = additionalDelay2;
-                            bestMachineBatch2 = &machineBatch;
-                            bestPosition2 = i;
-                        }
+                    double trialDelay = tryInsertBatch(machineBatch, currentBatch.batch, i, sortedMachines);
+                    double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
+                    if (additionalDelay < bestAdditionalDelay) {
+                        bestAdditionalDelay = additionalDelay;
+                        bestMachineBatch = &machineBatch;
+                        bestPosition = i;
                     }
                 }
             }
 
-            // 决定插入哪个批次
-            if (bestAdditionalDelay1 <= bestAdditionalDelay2 && bestMachineBatch1 && bestPosition1 >= 0) {
-                insertBatch(bestMachineBatch1, bestPosition1, firstBatch, bestAdditionalDelay1, sortedMachines);
+            // 决定插入批次
+            if (bestMachineBatch && bestPosition >= 0) {
+                insertBatch(bestMachineBatch, bestPosition, currentBatch, sortedMachines);
                 delayedBatches.erase(delayedBatches.begin() + j);
                 --j; // 调整索引以反映删除的批次
             }
-            else if (bestMachineBatch2 && bestPosition2 >= 0) {
-                insertBatch(bestMachineBatch2, bestPosition2, secondBatch, bestAdditionalDelay2, sortedMachines);
-                delayedBatches.erase(delayedBatches.begin() + j + 1);
-                --j; // 调整索引以反映删除的批次
-            }
-        }
-
-        // 处理最后一个批次
-        if (delayedBatches.size() == 1) {
-            insertLastBatch(machineBatches, delayedBatches[0], sortedMachines);
-            delayedBatches.pop_back();
         }
     }
 }
+
 
 
 
@@ -757,10 +791,8 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     // Copy the max delay batch
     DelayedBatch maxDelayBatch = *maxDelayIt;
 
-    // Copy the original vector to manipulate
+    // Create a new vector without the max delay batch to avoid picking it twice
     std::vector<DelayedBatch> tempBatches = delayedBatches;
-
-    // Remove the max delay batch from tempBatches to avoid duplication
     tempBatches.erase(maxDelayIt);
 
     // Randomly shuffle the remaining batches
@@ -768,19 +800,263 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     std::mt19937 g(rd());
     std::shuffle(tempBatches.begin(), tempBatches.end(), g);
 
-    // Decide how many batches to extract (for example, 3 batches in total)
-    std::uniform_int_distribution<size_t> dist(1, delayedBatches.size());
-    size_t numBatchesToExtract = dist(g); // Random number between 1 and the size of delayedBatches
-    size_t additionalBatchesNeeded = (numBatchesToExtract > 1) ? numBatchesToExtract - 1 : 0;
-    // Extract the random batches
+    // Decide how many batches to extract
+    std::uniform_int_distribution<size_t> dist(1, tempBatches.size() + 1); // +1 to include the possibility of only selecting the maxDelayBatch
+    size_t numBatchesToExtract = dist(g);
+    
+    // Prepare a vector to store the extracted batches, starting with the max delay batch
     std::vector<DelayedBatch> extractedBatches;
-    extractedBatches.push_back(maxDelayBatch); // Include max delay batch
-    for (size_t i = 0; i < additionalBatchesNeeded; ++i) {
+    extractedBatches.push_back(maxDelayBatch);
+
+    // Add random batches up to the determined number
+    for (size_t i = 0; i < numBatchesToExtract - 1; ++i) { // -1 because we've already added the max delay batch
         extractedBatches.push_back(tempBatches[i]);
     }
 
     return extractedBatches;
 }
+
+std::vector<PartTypeOrderInfo> extractAndRandomSelectParts(std::vector<MachineBatch>& machineBatches) {
+    std::vector<PartTypeOrderInfo> allDelayedParts;
+    DelayedBatch maxDelayBatch;
+    double maxWeightedDelay = 0;
+
+    // 从 machineBatches 中提取所有延迟零件
+    for (auto& machineBatch : machineBatches) {
+        for (auto& delayedInfo : machineBatch.DelayedBatchInfo) {
+            if (delayedInfo.WeightedDelay > 0) {
+                Batch& delayedBatch = machineBatch.Batches[delayedInfo.BatchIndex];
+                allDelayedParts.insert(allDelayedParts.end(), delayedBatch.parts.begin(), delayedBatch.parts.end());
+
+                if (delayedInfo.WeightedDelay > maxWeightedDelay) {
+                    maxWeightedDelay = delayedInfo.WeightedDelay;
+                    maxDelayBatch = { delayedBatch, delayedInfo.WeightedDelay };
+                }
+            }
+        }
+    }
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::uniform_int_distribution<int> dist(1, allDelayedParts.size());
+    int beta = dist(g);
+
+    // 从加权延迟最大批次中选择延迟零件
+    std::vector<PartTypeOrderInfo> selectedParts;
+    if (!maxDelayBatch.batch.parts.empty()) {
+        selectedParts.push_back(maxDelayBatch.batch.parts.front());
+    }
+
+    // 从所有延迟零件中随机选择其余零件
+    std::shuffle(allDelayedParts.begin(), allDelayedParts.end(), g);
+
+    while (selectedParts.size() < beta && !allDelayedParts.empty()) {
+        selectedParts.push_back(allDelayedParts.back());
+        allDelayedParts.pop_back();
+    }
+
+    // 打印 selectedParts 中的零件信息
+    for (const auto& partInfo : selectedParts) {
+        std::cout << "Part Type ID: " << partInfo.PartType->PartTypeId << std::endl;
+        std::cout << "Material: " << partInfo.Material << std::endl;
+        std::cout << "Order ID: " << partInfo.OrderInfo.OrderId << std::endl;
+        std::cout << "Due Date: " << partInfo.OrderInfo.DueDate << std::endl;
+        std::cout << "Penalty Cost: " << partInfo.OrderInfo.PenaltyCost << std::endl;
+        std::cout << "---------------------------" << std::endl;
+    }
+
+    return selectedParts;
+}
+void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatches, const std::vector<PartTypeOrderInfo>& extractedParts, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    // 创建一个集合来存储需要移除的批次索引
+    std::set<int> batchesToRemove;
+
+    // 遍历所有机器批次
+    for (auto& machineBatch : machineBatches) {
+        // 遍历机器中的每个批次
+        for (int i = 0; i < machineBatch.Batches.size(); ++i) {
+            Batch& batch = machineBatch.Batches[i];
+
+            // 检查批次中是否有被抽取的零件
+            for (auto& part : batch.parts) {
+                if (std::find_if(extractedParts.begin(), extractedParts.end(), [&part](const PartTypeOrderInfo& extractedPart) {
+                    return extractedPart.PartType->PartTypeId == part.PartType->PartTypeId &&
+                        extractedPart.OrderInfo.OrderId == part.OrderInfo.OrderId;
+                    }) != extractedParts.end()) {
+                    // 如果批次包含被抽取的零件，则标记该批次进行移除
+                    batchesToRemove.insert(i);
+                    break;
+                }
+            }
+        }
+
+        // 移除包含被抽取零件的批次
+        for (auto it = batchesToRemove.rbegin(); it != batchesToRemove.rend(); ++it) {
+            machineBatch.Batches.erase(machineBatch.Batches.begin() + *it);
+        }
+
+        // 重置集合以用于下一个 MachineBatch
+        batchesToRemove.clear();
+
+        // 更新机器批次的运行时间和总加权延迟
+        updateMachineBatches(machineBatch, sortedMachines); // 假设 sortedMachines 是可访问的
+    }
+}
+
+// 假设 PartTypeOrderInfo 结构体包含 Volume 字段
+bool partComparator(const PartTypeOrderInfo& a, const PartTypeOrderInfo& b) {
+    if (a.OrderInfo.DueDate != b.OrderInfo.DueDate)
+        return a.OrderInfo.DueDate < b.OrderInfo.DueDate;
+    if (a.OrderInfo.PenaltyCost != b.OrderInfo.PenaltyCost)
+        return a.OrderInfo.PenaltyCost > b.OrderInfo.PenaltyCost;
+    if (a.PartType->Volume != b.PartType->Volume)
+        return a.PartType->Volume > b.PartType->Volume;
+    return std::rand() > std::rand(); // 随机返回 true 或 false
+}
+// 判断零件是否可以添加到现有的批次中
+bool canInsertPartToBatch(const PartTypeOrderInfo& partInfo, const Batch& batch, const Machine& machine) {
+    // 判断材料类型是否相同
+    if (partInfo.Material != batch.materialType) {
+        return false;
+    }
+
+    // 估算插入后的批次完成时间和延迟
+    double newTotalArea = batch.totalArea + partInfo.PartType->Area;
+    if (newTotalArea > machine.Area) {
+        return false; // 新的总面积不应超过机器的容量
+    }
+
+    // 如果可以插入，返回 true
+    return true;
+}
+
+// 寻找最佳插入位置
+std::tuple<int, int> findOverallBestInsertionPosition(std::vector<MachineBatch>& machineBatches, const PartTypeOrderInfo& partInfo, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    int bestMachineIndex = -1;
+    int bestBatchIndex = -1;
+    double bestAdditionalDelay = std::numeric_limits<double>::max();
+
+    // 遍历所有机器批次
+    for (int machineIndex = 0; machineIndex < machineBatches.size(); ++machineIndex) {
+        MachineBatch& machineBatch = machineBatches[machineIndex];
+        const Machine& machine = findMachineById(sortedMachines, machineBatch.MachineId);
+
+        // 遍历当前机器的所有批次
+        for (int batchIndex = 0; batchIndex < machineBatch.Batches.size(); ++batchIndex) {
+            Batch& batch = machineBatch.Batches[batchIndex];
+
+            // 检查是否可以将零件插入到当前批次
+            if (canInsertPartToBatch(partInfo, batch, machine)) {
+                // 计算插入后的延迟
+                Batch tempBatch = batch; // 创建当前批次的副本
+                tempBatch.parts.push_back(partInfo); // 将零件添加到批次副本
+                double trialDelay = calculateWeightedDelay(tempBatch, machineBatch.RunningTime);
+                double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
+
+                // 如果插入后的延迟更小，则更新最佳位置
+                if (additionalDelay < bestAdditionalDelay) {
+                    bestAdditionalDelay = additionalDelay;
+                    bestMachineIndex = machineIndex;
+                    bestBatchIndex = batchIndex;
+                }
+            }
+        }
+    }
+
+    return std::make_tuple(bestMachineIndex, bestBatchIndex);
+}
+std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machineBatches, const PartTypeOrderInfo& partInfo, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    int bestMachineIndex = -1;
+    int bestBatchIndex = -1;
+    double bestAdditionalDelay = std::numeric_limits<double>::max();
+
+    // 遍历所有机器批次
+    for (int machineIndex = 0; machineIndex < machineBatches.size(); ++machineIndex) {
+        MachineBatch& machineBatch = machineBatches[machineIndex];
+        const Machine& machine = findMachineById(sortedMachines, machineBatch.MachineId);
+
+        // 遍历当前机器的所有批次
+        for (int batchIndex = 0; batchIndex < machineBatch.Batches.size(); ++batchIndex) {
+            Batch& batch = machineBatch.Batches[batchIndex];
+
+            // 检查是否可以将零件插入到当前批次
+            if (canInsertPartToBatch(partInfo, batch, machine)) {
+                // 创建批次的副本来测试插入
+                MachineBatch tempMachineBatch = machineBatch;
+                tempMachineBatch.Batches[batchIndex].parts.push_back(partInfo); // 假设插入零件
+                tempMachineBatch.Batches[batchIndex].totalArea += partInfo.PartType->Area;
+
+                // 重新计算延迟
+                updateMachineBatches(tempMachineBatch, sortedMachines);
+                double additionalDelay = tempMachineBatch.TotalWeightedDelay - machineBatch.TotalWeightedDelay;
+
+                // 如果插入后的延迟更小，则更新最佳位置
+                if (additionalDelay < bestAdditionalDelay) {
+                    bestAdditionalDelay = additionalDelay;
+                    bestMachineIndex = machineIndex;
+                    bestBatchIndex = batchIndex;
+                }
+            }
+        }
+    }
+
+    return std::make_tuple(bestMachineIndex, bestBatchIndex);
+}
+
+// 在找到的最佳批次位置插入零件
+void insertPartAtPosition(MachineBatch& machineBatch, int batchIndex, const PartTypeOrderInfo& partInfo, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    // 在批次中添加部件
+    machineBatch.Batches[batchIndex].parts.push_back(partInfo);
+    machineBatch.Batches[batchIndex].totalArea += partInfo.PartType->Area;
+
+    // 更新机器批次的运行时间和总加权延迟
+    updateMachineBatches(machineBatch, sortedMachines);
+
+    // 如果新的加权延迟大于0，则更新 DelayedBatchInfo
+    double batchDelay = calculateWeightedDelay(machineBatch.Batches[batchIndex], machineBatch.RunningTime);
+    if (batchDelay > 0) {
+        DelayedBatchInfo dbInfo;
+        dbInfo.BatchIndex = batchIndex + 1;  // 批次索引从1开始
+        dbInfo.WeightedDelay = batchDelay;
+        dbInfo.thisBatchTime = machineBatch.RunningTime;
+        dbInfo.newPosition = batchIndex;  // 插入的位置
+        machineBatch.DelayedBatchInfo.push_back(dbInfo);
+    }
+}
+
+
+void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines, std::vector<PartTypeOrderInfo>& parts) {
+    // 对 parts 按照 DueDate, PenaltyCost, Volume 排序
+    std::sort(parts.begin(), parts.end(), partComparator);
+
+    for (auto& partInfo : parts) {
+        int bestMachineIndex, bestPosition;
+        std::tie(bestMachineIndex, bestPosition) = findBestInsertionPosition(machineBatches, partInfo, sortedMachines);
+
+        // 如果找到了最佳位置，就将零件插入到最佳位置
+        if (bestMachineIndex != -1 && bestPosition != -1) {
+            insertPartAtPosition(machineBatches[bestMachineIndex], bestPosition, partInfo, sortedMachines);
+        }
+        else {
+            // 如果没有合适的批次可以插入，就在最佳的机器上创建新批次
+            int machineIndexToInsert = selectMachineWithLeastRunningTime(machineBatches);
+            MachineBatch& machineBatchToInsert = machineBatches[machineIndexToInsert];
+            Batch newBatch;
+            newBatch.materialType = partInfo.Material;
+            newBatch.parts.push_back(partInfo); // 添加这个新零件到新批次
+            newBatch.totalArea = partInfo.PartType->Area; // 新批次的总面积等于零件的面积
+
+            // 确保新批次不超过机器的总面积
+            if (newBatch.totalArea <= findMachineById(sortedMachines, machineBatchToInsert.MachineId).Area) {
+                machineBatchToInsert.Batches.push_back(newBatch); // 将新批次添加到机器批次中
+                updateMachineBatches(machineBatchToInsert, sortedMachines); // 更新机器批次信息
+            }
+        }
+    }
+}
+
+
+
 
 void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstream& outFile)
 {
@@ -937,41 +1213,60 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
 
     printMachineBatch(machineBatches, outFile);
 
-
     outFile << "----------------------------------" << "\n";
     double result = sumTotalWeightedDelay(machineBatches);
     outFile << "  初始解 : " << result << "\n"; //step 6.
     outFile << "----------------------------------" << "\n";
 
 
-
     std::vector<DelayedBatch> delayedBatches = extractDelayedBatches(machineBatches);
+    std::cout << "1 :  " << std::endl;
     printDelayedBatches(delayedBatches, outFile);
+    std::cout << "2 :  " << std::endl;
     // 更新每台机器的运行时间和总延迟
     for (auto& machineBatch : machineBatches) {
+        std::cout << "machineBatchID :  " << machineBatch.MachineId << std::endl;
         updateMachineBatches(machineBatch, sortedMachines);
     }
+    std::cout << "2 finish :  " << std::endl;
     outFile << "----------------------------------" << "\n";
     // printMachineBatch(machineBatches, outFile);
 
     std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
+    std::cout << "3 :  " << std::endl;
     outFile << "隨機抽取 : " << "\n";
     outFile << "----------------------------------" << "\n";
     printDelayedBatches(delayedBatchesList, outFile);
+    std::cout << "4 :  " << std::endl;
     outFile << "----------------------------------" << "\n";
     // //TODO：以下邏輯更改
     reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
+    std::cout << "5 :  " << std::endl;
     outFile << "----------------------------------" << "\n";
     outFile << " 插入後 : " << "\n";
     outFile << "----------------------------------" << "\n";
     printMachineBatch(machineBatches, outFile);
+    std::cout << "6 :  " << std::endl;
     outFile << "----------------------------------" << "\n";
     double result2 = sumTotalWeightedDelay(machineBatches);
     outFile << "  第2次初始解 : " << result2 << "\n"; //step 6.
     outFile << "----------------------------------" << "\n";
+    std::cout << "7 :  " << std::endl;
 
-
-
+    //TODO：
+    std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
+    std::cout << "8 :  " << std::endl;
+    updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
+    std::cout << "9 :  " << std::endl;
+    sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
+    std::cout << "10 :  " << std::endl;
+    printMachineBatch(machineBatches, outFile);
+    std::cout << "11 :  " << std::endl;
+    outFile << "----------------------------------" << "\n";
+    double result3 = sumTotalWeightedDelay(machineBatches);
+    std::cout << "12 :  " << std::endl;
+    outFile << "  第3次初始解 : " << result3 << "\n"; //step 6.
+    outFile << "----------------------------------" << "\n";
 }
 
 
