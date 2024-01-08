@@ -312,15 +312,22 @@ bool canAddToBatchOrNeedNewBatch(const Batch& batch, int machineId, const Machin
 
     return volumeTime > heightTime;
 }
+struct AllocationResult {
+    Batch batch;
+    std::map<int, std::vector<PartTypeOrderInfo>> updatedMaterials;
+};
 
-Batch allocateMaterialToMachine(MachineBatch& selectedMachineBatch, int selectedMaterial, std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials, const Machine* machine) {
+AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, int selectedMaterial,
+    std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials,
+    const Machine* machine) {
     Batch newBatch;
     newBatch.materialType = selectedMaterial;
     newBatch.totalArea = 0.0;
 
+
     if (remainingMaterials.find(selectedMaterial) != remainingMaterials.end()) {
         auto& materialList = remainingMaterials[selectedMaterial];
-        for (auto it = materialList.begin(); it != materialList.end(); ) {
+        for (auto it = materialList.begin(); it != materialList.end();) {
             double partArea = it->PartType->Area;
 
             // 检查面积限制
@@ -347,7 +354,8 @@ Batch allocateMaterialToMachine(MachineBatch& selectedMachineBatch, int selected
         }
     }
 
-    return newBatch;
+
+    return { newBatch, remainingMaterials };
 }
 
 
@@ -358,6 +366,7 @@ void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>>& rem
     // 檢查選定的材料類型是否存在於 remainingMaterials 中
     if (remainingMaterials.find(selectedMaterialType) != remainingMaterials.end())
     {
+
         // 移除已分配的材料
         // 如果材料的陣列為空，則從映射中刪除該材料類型
         if (remainingMaterials[selectedMaterialType].empty())
@@ -365,6 +374,7 @@ void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>>& rem
             remainingMaterials.erase(selectedMaterialType);
         }
     }
+
 }
 
 int selectEarliestMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& sortedMaterials)
@@ -461,8 +471,9 @@ std::vector<MachineBatch> createMachineBatches(
 
     auto remainingMaterials = sortedMaterials;
 
-     for (const auto& materialEntry : remainingMaterials)
+    while (!remainingMaterials.empty())
     {
+
         int selectedMaterial = selectEarliestMaterial(remainingMaterials);
         int selectedMachineId = selectMachineWithLeastRunningTime(machineBatches);
         MachineBatch& machineBatchRef = findMachineBatchById(machineBatches, selectedMachineId);
@@ -491,15 +502,19 @@ std::vector<MachineBatch> createMachineBatches(
             machineBatchRef.RunningTime += setUpTime;
         }
 
-        Batch newBatch = allocateMaterialToMachine(machineBatchRef, selectedMaterial, remainingMaterials, &machineIt->second);
-        double finishTime = calculateFinishTime(newBatch, machineBatchRef.MachineId, &machineIt->second);
+        AllocationResult result = allocateMaterialToMachine(machineBatchRef, selectedMaterial, remainingMaterials, &machineIt->second);
+        remainingMaterials = result.updatedMaterials;
+               updateRemainingMaterials(remainingMaterials, selectedMaterial);
+
+        double finishTime = calculateFinishTime(result.batch, machineBatchRef.MachineId, &machineIt->second);
         machineBatchRef.RunningTime += finishTime;
 
-        machineBatchRef.Batches.push_back(newBatch);
+        machineBatchRef.Batches.push_back(result.batch);
+
 
         DelayedBatchInfo delayedInfo{
             static_cast<int>(machineBatchRef.Batches.size()),
-            calculateWeightedDelay(newBatch, machineBatchRef.RunningTime),
+            calculateWeightedDelay(result.batch, machineBatchRef.RunningTime),
             machineBatchRef.RunningTime
         };
 
@@ -508,6 +523,8 @@ std::vector<MachineBatch> createMachineBatches(
 
         updateRemainingMaterials(remainingMaterials, selectedMaterial);
         lastMaterialForMachine[selectedMachineId] = selectedMaterial;
+
+
     }
 
     return machineBatches;
@@ -1234,8 +1251,7 @@ int main() {
             std::string jsonFileName = std::string(findFileData.cFileName);
             std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + jsonFileName;
 
-
-            std::string outputFileName = "output_" + jsonFileName + ".txt";
+            std::string outputFileName = "C:/Users/2200555M/Documents/Project/.vscode/output/output_" + jsonFileName + ".txt";
             std::ofstream outFile(outputFileName);
 
             read_json(fullPath, outFile);
@@ -1247,3 +1263,4 @@ int main() {
     }
     return 0;
 }
+
