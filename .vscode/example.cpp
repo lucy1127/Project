@@ -310,7 +310,7 @@ bool canAddToBatchOrNeedNewBatch(const Batch& batch, int machineId, const Machin
 
     double heightTime = maxHeight * machine->RecoatTime;
 
-    return volumeTime > heightTime;
+    return volumeTime < heightTime;
 }
 struct AllocationResult {
     Batch batch;
@@ -324,36 +324,53 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
     newBatch.materialType = selectedMaterial;
     newBatch.totalArea = 0.0;
 
-
     if (remainingMaterials.find(selectedMaterial) != remainingMaterials.end()) {
         auto& materialList = remainingMaterials[selectedMaterial];
         for (auto it = materialList.begin(); it != materialList.end();) {
             double partArea = it->PartType->Area;
 
-            // 检查面积限制
+            // 檢查機台空間是否可以容納
             if (newBatch.totalArea + partArea <= selectedMachineBatch.MachineArea) {
-                // 临时添加当前部件到批次，以用于判断
+                // 临时添加当前部件到批次
                 newBatch.parts.push_back(*it);
                 newBatch.totalArea += partArea;
 
-                // 判断是否可以加入当前批次
-                if (canAddToBatchOrNeedNewBatch(newBatch, selectedMachineBatch.MachineId, machine)) {
-                    // 如果可以，保留在批次中
+                // 計算當前批次的預計完成時間
+                double finishTime = calculateFinishTime(newBatch, selectedMachineBatch.MachineId, machine);
+
+                // 檢查是否可以加入當前批次
+                if (canAddToBatchOrNeedNewBatch(newBatch, selectedMachineBatch.MachineId, machine) &&
+                    it->OrderInfo.DueDate < finishTime) {
+                    // 如果可以且符合條件，保留在批次中
                     it = materialList.erase(it);
                 }
                 else {
-                    // 如果不可以，需要移除刚才添加的部件，并跳出循环
+                    // 如果不可以或不符合條件，移除剛才添加的部件
                     newBatch.parts.pop_back();
                     newBatch.totalArea -= partArea;
-                    break;
+
+                    // 檢查是否是新的批次
+                    if (newBatch.parts.empty()) {
+                        // 如果是新的批次，保留這個零件，跳出循環
+                        break;
+                    }
+                    else {
+                        // 繼續檢查下一個零件
+                        ++it;
+                    }
                 }
             }
             else {
                 ++it;
             }
         }
-    }
 
+        // 如果沒有零件被加入新批次，且原料列表中仍有零件，則將第一個零件單獨形成一個新批次
+        if (newBatch.parts.empty() && !materialList.empty()) {
+            newBatch.parts.push_back(materialList.front());
+            materialList.erase(materialList.begin());
+        }
+    }
 
     return { newBatch, remainingMaterials };
 }
@@ -504,13 +521,12 @@ std::vector<MachineBatch> createMachineBatches(
 
         AllocationResult result = allocateMaterialToMachine(machineBatchRef, selectedMaterial, remainingMaterials, &machineIt->second);
         remainingMaterials = result.updatedMaterials;
-               updateRemainingMaterials(remainingMaterials, selectedMaterial);
+        updateRemainingMaterials(remainingMaterials, selectedMaterial);
 
         double finishTime = calculateFinishTime(result.batch, machineBatchRef.MachineId, &machineIt->second);
         machineBatchRef.RunningTime += finishTime;
 
         machineBatchRef.Batches.push_back(result.batch);
-
 
         DelayedBatchInfo delayedInfo{
             static_cast<int>(machineBatchRef.Batches.size()),
@@ -523,7 +539,6 @@ std::vector<MachineBatch> createMachineBatches(
 
         updateRemainingMaterials(remainingMaterials, selectedMaterial);
         lastMaterialForMachine[selectedMachineId] = selectedMaterial;
-
 
     }
 
@@ -1200,41 +1215,44 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
     outFile << "  初始解 : " << result << "\n"; //step 6.
     outFile << "----------------------------------" << "\n";
 
+    if (result != 0) {
+        std::vector<DelayedBatch> delayedBatches = extractDelayedBatches(machineBatches);
+        printDelayedBatches(delayedBatches, outFile);
+        // 更新每台机器的运行时间和总延迟
+        for (auto& machineBatch : machineBatches) {
+            updateMachineBatches(machineBatch, sortedMachines);
+        }
+        outFile << "----------------------------------" << "\n";
+        printMachineBatch(machineBatches, outFile);
 
-    std::vector<DelayedBatch> delayedBatches = extractDelayedBatches(machineBatches);
-    printDelayedBatches(delayedBatches, outFile);
-    // 更新每台机器的运行时间和总延迟
-    for (auto& machineBatch : machineBatches) {
-        updateMachineBatches(machineBatch, sortedMachines);
+        // std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
+        // outFile << "隨機抽取 : " << "\n";
+        // outFile << "----------------------------------" << "\n";
+        // printDelayedBatches(delayedBatchesList, outFile);
+        // outFile << "----------------------------------" << "\n";
+        // // //TODO：以下邏輯更改
+        // reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
+        // outFile << "----------------------------------" << "\n";
+        // outFile << " 插入後 : " << "\n";
+        // outFile << "----------------------------------" << "\n";
+        // printMachineBatch(machineBatches, outFile);
+        // outFile << "----------------------------------" << "\n";
+        // double result2 = sumTotalWeightedDelay(machineBatches);
+        // outFile << "  第2次初始解 : " << result2 << "\n"; //step 6.
+        // outFile << "----------------------------------" << "\n";
+
+        // //TODO：
+        // std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
+        // updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
+        // sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
+        // printMachineBatch(machineBatches, outFile);
+        // outFile << "----------------------------------" << "\n";
+        // double result3 = sumTotalWeightedDelay(machineBatches);
+        // outFile << "  第3次初始解 : " << result3 << "\n"; //step 6.
+        // outFile << "----------------------------------" << "\n";
     }
-    outFile << "----------------------------------" << "\n";
-    printMachineBatch(machineBatches, outFile);
 
-    std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
-    outFile << "隨機抽取 : " << "\n";
-    outFile << "----------------------------------" << "\n";
-    printDelayedBatches(delayedBatchesList, outFile);
-    outFile << "----------------------------------" << "\n";
-    // //TODO：以下邏輯更改
-    reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
-    outFile << "----------------------------------" << "\n";
-    outFile << " 插入後 : " << "\n";
-    outFile << "----------------------------------" << "\n";
-    printMachineBatch(machineBatches, outFile);
-    outFile << "----------------------------------" << "\n";
-    double result2 = sumTotalWeightedDelay(machineBatches);
-    outFile << "  第2次初始解 : " << result2 << "\n"; //step 6.
-    outFile << "----------------------------------" << "\n";
 
-    //TODO：
-    std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
-    updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
-    sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
-    printMachineBatch(machineBatches, outFile);
-    outFile << "----------------------------------" << "\n";
-    double result3 = sumTotalWeightedDelay(machineBatches);
-    outFile << "  第3次初始解 : " << result3 << "\n"; //step 6.
-    outFile << "----------------------------------" << "\n";
 }
 
 
