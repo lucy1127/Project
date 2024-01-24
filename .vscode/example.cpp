@@ -523,9 +523,9 @@ std::vector<DelayedBatch> extractDelayedBatches(std::vector<MachineBatch>& machi
 
         for (int i = machineBatch.DelayedBatchInfo.size() - 1; i >= 0; i--) {
             const auto& delayedInfo = machineBatch.DelayedBatchInfo[i];
-            if (delayedInfo.WeightedDelay > 0) { 
+            if (delayedInfo.WeightedDelay > 0) {
                 DelayedBatch delayedBatch;
-                delayedBatch.batch = machineBatch.Batches[delayedInfo.BatchIndex - 1]; 
+                delayedBatch.batch = machineBatch.Batches[delayedInfo.BatchIndex - 1];
                 delayedBatch.time = machineBatch.DelayedBatchInfo[delayedInfo.BatchIndex - 1].thisBatchTime;
                 delayedBatch.WeightedDelay = machineBatch.DelayedBatchInfo[delayedInfo.BatchIndex - 1].WeightedDelay;
                 delayedBatches.push_back(delayedBatch);
@@ -563,7 +563,7 @@ void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pai
 
         if (batchDelay > 0) {
             DelayedBatchInfo dbInfo;
-            dbInfo.BatchIndex = &batch - &machineBatch.Batches[0] + 1;  
+            dbInfo.BatchIndex = &batch - &machineBatch.Batches[0] + 1;
             dbInfo.WeightedDelay = batchDelay;
             dbInfo.thisBatchTime = machineBatch.RunningTime;
             machineBatch.DelayedBatchInfo.push_back(dbInfo);
@@ -639,7 +639,7 @@ void insertBatch(MachineBatch* machineBatch, int position, DelayedBatch& delayed
 
     machineBatch->RunningTime = 0.0;
     machineBatch->TotalWeightedDelay = 0.0;
-    machineBatch->DelayedBatchInfo.clear(); 
+    machineBatch->DelayedBatchInfo.clear();
 
     int lastMaterial = -1;
     for (size_t i = 0; i < machineBatch->Batches.size(); ++i) {
@@ -756,7 +756,7 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
         return {};
     }
 
-   auto maxDelayIt = std::max_element(delayedBatches.begin(), delayedBatches.end(),
+    auto maxDelayIt = std::max_element(delayedBatches.begin(), delayedBatches.end(),
         [](const DelayedBatch& a, const DelayedBatch& b) {
             return a.WeightedDelay < b.WeightedDelay;
         });
@@ -764,7 +764,7 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
 
     DelayedBatch maxDelayBatch = *maxDelayIt;
 
-     std::vector<DelayedBatch> tempBatches = delayedBatches;
+    std::vector<DelayedBatch> tempBatches = delayedBatches;
     tempBatches.erase(maxDelayIt);
 
 
@@ -828,7 +828,7 @@ std::vector<PartTypeOrderInfo> extractAndRandomSelectParts(std::vector<MachineBa
     return selectedParts;
 }
 void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatches, const std::vector<PartTypeOrderInfo>& extractedParts, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    
+
     std::set<int> batchesToRemove;
 
     for (auto& machineBatch : machineBatches) {
@@ -852,7 +852,7 @@ void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatch
 
         batchesToRemove.clear();
 
-        updateMachineBatches(machineBatch, sortedMachines); 
+        updateMachineBatches(machineBatch, sortedMachines);
     }
 }
 
@@ -871,7 +871,7 @@ bool canInsertPartToBatch(const PartTypeOrderInfo& partInfo, const Batch& batch,
     }
     double newTotalArea = batch.totalArea + partInfo.PartType->Area;
     if (newTotalArea > machine.Area) {
-        return false; 
+        return false;
     }
     return true;
 }
@@ -890,7 +890,7 @@ std::tuple<int, int> findOverallBestInsertionPosition(std::vector<MachineBatch>&
 
             if (canInsertPartToBatch(partInfo, batch, machine)) {
                 Batch tempBatch = batch;
-                tempBatch.parts.push_back(partInfo); 
+                tempBatch.parts.push_back(partInfo);
                 double trialDelay = calculateWeightedDelay(tempBatch, machineBatch.RunningTime);
                 double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
 
@@ -917,9 +917,11 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
         for (int batchIndex = 0; batchIndex < machineBatch.Batches.size(); ++batchIndex) {
             Batch& batch = machineBatch.Batches[batchIndex];
 
-            if (canInsertPartToBatch(partInfo, batch, machine)) {
+            double finishTime = calculateFinishTime(batch, machineBatch.MachineId, &machine);
+            if (canInsertPartToBatch(partInfo, batch, machine) && !canAddToBatchOrNeedNewBatch(batch, machine.MachineId, &machine) ||
+                partInfo.OrderInfo.DueDate >= finishTime) {
                 MachineBatch tempMachineBatch = machineBatch;
-                tempMachineBatch.Batches[batchIndex].parts.push_back(partInfo); 
+                tempMachineBatch.Batches[batchIndex].parts.push_back(partInfo);
                 tempMachineBatch.Batches[batchIndex].totalArea += partInfo.PartType->Area;
 
                 updateMachineBatches(tempMachineBatch, sortedMachines);
@@ -1151,29 +1153,37 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         }
         outFile << "----------------------------------" << "\n";
         // printMachineBatch(machineBatches, outFile);
-
+        std::cout << "1 " << std::endl;
         std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
         outFile << "隨機抽取 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printDelayedBatches(delayedBatchesList, outFile);
+        std::cout << "2 " << std::endl;
         outFile << "----------------------------------" << "\n";
         reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
+        std::cout << "3" << std::endl;
         outFile << "----------------------------------" << "\n";
         outFile << " 插入後 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
+        std::cout << "4 " << std::endl;
         double result2 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第2次初始解 : " << result2 << "\n";
         outFile << "----------------------------------" << "\n";
+        std::cout << "5 " << std::endl;
 
         //TODO：
         std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
+        std::cout << "6" << std::endl;
         updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
+        std::cout << "7" << std::endl;
         sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
+        std::cout << "8" << std::endl;
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
         double result3 = sumTotalWeightedDelay(machineBatches);
+        std::cout << "9" << std::endl;
         outFile << "  第3次初始解 : " << result3 << "\n";
         outFile << "----------------------------------" << "\n";
 
