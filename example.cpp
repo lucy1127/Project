@@ -755,15 +755,15 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     if (delayedBatches.empty()) {
         return {};
     }
-    std::cout << "HERE....." << std::endl;
+
     auto maxDelayIt = std::max_element(delayedBatches.begin(), delayedBatches.end(),
         [](const DelayedBatch& a, const DelayedBatch& b) {
             return a.WeightedDelay < b.WeightedDelay;
         });
-    std::cout << "HERE LALAL....." << std::endl;
+
 
     DelayedBatch maxDelayBatch = *maxDelayIt;
-    std::cout << "HERE LALAAAAAAAL....." << std::endl;
+
 
     std::vector<DelayedBatch> tempBatches = delayedBatches;
     auto maxDelayItCopy = tempBatches.begin() + (maxDelayIt - delayedBatches.begin());
@@ -773,10 +773,10 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(tempBatches.begin(), tempBatches.end(), g);
-    std::cout << "2....." << std::endl;
+
     std::uniform_int_distribution<size_t> dist(1, tempBatches.size() + 1); // +1 to include the possibility of only selecting the maxDelayBatch
     size_t numBatchesToExtract = dist(g);
-    std::cout << "3....." << std::endl;
+
     std::vector<DelayedBatch> extractedBatches;
     extractedBatches.push_back(maxDelayBatch);
 
@@ -784,7 +784,7 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     for (size_t i = 0; i < numBatchesToExtract - 1; ++i) { // -1 because we've already added the max delay batch
         extractedBatches.push_back(tempBatches[i]);
     }
-    std::cout << "4....." << std::endl;
+
     return extractedBatches;
 }
 
@@ -1155,38 +1155,35 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         }
         outFile << "----------------------------------" << "\n";
         // printMachineBatch(machineBatches, outFile);
-        std::cout << "1 " << std::endl;
         std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
-        std::cout << "1....." << std::endl;
         outFile << "隨機抽取 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printDelayedBatches(delayedBatchesList, outFile);
-        std::cout << "2 " << std::endl;
+
         outFile << "----------------------------------" << "\n";
         reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
-        std::cout << "3" << std::endl;
+
         outFile << "----------------------------------" << "\n";
         outFile << " 插入後 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
-        std::cout << "4 " << std::endl;
+
         double result2 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第2次初始解 : " << result2 << "\n";
         outFile << "----------------------------------" << "\n";
-        std::cout << "5 " << std::endl;
 
         //TODO：
         std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
-        std::cout << "6" << std::endl;
+
         updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
-        std::cout << "7" << std::endl;
+
         sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
-        std::cout << "8" << std::endl;
+
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
         double result3 = sumTotalWeightedDelay(machineBatches);
-        std::cout << "9" << std::endl;
+
         outFile << "  第3次初始解 : " << result3 << "\n";
         outFile << "----------------------------------" << "\n";
 
@@ -1198,7 +1195,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/.vscode/test/*.json", &findFileData);
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test/*.json", &findFileData);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
@@ -1207,9 +1204,9 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            std::string fullPath = "C:/Users/2200555M/Documents/Project/.vscode/test/" + jsonFileName;
+            std::string fullPath = "C:/Users/2200555M/Documents/Project/test/" + jsonFileName;
 
-            std::string outputFileName = "C:/Users/2200555M/Documents/Project/.vscode/output/output_" + jsonFileName + ".txt";
+            std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
             std::ofstream outFile(outputFileName);
 
             read_json(fullPath, outFile);
