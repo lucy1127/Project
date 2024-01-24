@@ -755,26 +755,28 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     if (delayedBatches.empty()) {
         return {};
     }
-
+    std::cout << "HERE....." << std::endl;
     auto maxDelayIt = std::max_element(delayedBatches.begin(), delayedBatches.end(),
         [](const DelayedBatch& a, const DelayedBatch& b) {
             return a.WeightedDelay < b.WeightedDelay;
         });
-
+    std::cout << "HERE LALAL....." << std::endl;
 
     DelayedBatch maxDelayBatch = *maxDelayIt;
+    std::cout << "HERE LALAAAAAAAL....." << std::endl;
 
     std::vector<DelayedBatch> tempBatches = delayedBatches;
-    tempBatches.erase(maxDelayIt);
+    auto maxDelayItCopy = tempBatches.begin() + (maxDelayIt - delayedBatches.begin());
+    tempBatches.erase(maxDelayItCopy);
 
 
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(tempBatches.begin(), tempBatches.end(), g);
-
+    std::cout << "2....." << std::endl;
     std::uniform_int_distribution<size_t> dist(1, tempBatches.size() + 1); // +1 to include the possibility of only selecting the maxDelayBatch
     size_t numBatchesToExtract = dist(g);
-
+    std::cout << "3....." << std::endl;
     std::vector<DelayedBatch> extractedBatches;
     extractedBatches.push_back(maxDelayBatch);
 
@@ -782,7 +784,7 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     for (size_t i = 0; i < numBatchesToExtract - 1; ++i) { // -1 because we've already added the max delay batch
         extractedBatches.push_back(tempBatches[i]);
     }
-
+    std::cout << "4....." << std::endl;
     return extractedBatches;
 }
 
@@ -1155,6 +1157,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         // printMachineBatch(machineBatches, outFile);
         std::cout << "1 " << std::endl;
         std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
+        std::cout << "1....." << std::endl;
         outFile << "隨機抽取 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printDelayedBatches(delayedBatchesList, outFile);
