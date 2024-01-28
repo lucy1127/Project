@@ -28,7 +28,7 @@ struct PartType
 
 struct OrderDetail
 {
-    PartType* PartType;
+    PartType* partType;
     int Quantity;
     int Material;
     int Quality;
@@ -64,8 +64,8 @@ struct Machine
 struct PartTypeOrderInfo
 {
     int Material;
-    PartType* PartType;
-    OrderInfo OrderInfo;
+    PartType* partType;
+    OrderInfo orderInfo;
 };
 
 struct Batch
@@ -89,7 +89,7 @@ struct MachineBatch
     double RunningTime;
     double TotalWeightedDelay;
     std::vector<Batch> Batches;
-    std::vector<DelayedBatchInfo> DelayedBatchInfo;
+    std::vector<DelayedBatchInfo> delayedBatchInfo;
 };
 
 struct DelayedBatch {
@@ -133,8 +133,8 @@ bool orderDetailComparator(const OrderDetail& a, const OrderDetail& b, const std
 {
     const Order& orderA = orders.at(a.OrderId);
     const Order& orderB = orders.at(b.OrderId);
-    const PartType& partA = *a.PartType;
-    const PartType& partB = *b.PartType;
+    const PartType& partA = *a.partType;
+    const PartType& partB = *b.partType;
 
 
     if (orderA.DueDate != orderB.DueDate)
@@ -192,7 +192,7 @@ std::map<int, std::vector<PartTypeOrderInfo>> generateFinalSortedPartTypes(
         for (const auto& detail : allOrderDetails)
         {
             PartTypeOrderInfo info;
-            info.PartType = detail.PartType;
+            info.partType = detail.partType;
             info.Material = detail.Material;
             const Order& order = orders.at(detail.OrderId);
 
@@ -202,7 +202,7 @@ std::map<int, std::vector<PartTypeOrderInfo>> generateFinalSortedPartTypes(
             orderInfo.DueDate = order.DueDate;
             orderInfo.ReleaseDate = order.ReleaseDate;
             orderInfo.PenaltyCost = order.PenaltyCost;
-            info.OrderInfo = orderInfo;
+            info.orderInfo = orderInfo;
 
             for (int i = 0; i < detail.Quantity; ++i)
             {
@@ -238,14 +238,14 @@ int selectMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& remainin
     {
         for (const auto& partInfo : materialEntry.second)
         {
-            if (partInfo.OrderInfo.DueDate < earliestDueDate ||
-                (partInfo.OrderInfo.DueDate == earliestDueDate && partInfo.OrderInfo.PenaltyCost < lowestPenaltyCost) ||
-                (partInfo.OrderInfo.DueDate == earliestDueDate && partInfo.OrderInfo.PenaltyCost == lowestPenaltyCost && partInfo.PartType->Volume > smallestVolume))
+            if (partInfo.orderInfo.DueDate < earliestDueDate ||
+                (partInfo.orderInfo.DueDate == earliestDueDate && partInfo.orderInfo.PenaltyCost < lowestPenaltyCost) ||
+                (partInfo.orderInfo.DueDate == earliestDueDate && partInfo.orderInfo.PenaltyCost == lowestPenaltyCost && partInfo.partType->Volume > smallestVolume))
             {
 
-                earliestDueDate = partInfo.OrderInfo.DueDate;
-                lowestPenaltyCost = partInfo.OrderInfo.PenaltyCost;
-                smallestVolume = partInfo.PartType->Volume;
+                earliestDueDate = partInfo.orderInfo.DueDate;
+                lowestPenaltyCost = partInfo.orderInfo.PenaltyCost;
+                smallestVolume = partInfo.partType->Volume;
                 selectedMaterial = materialEntry.first;
             }
         }
@@ -279,8 +279,8 @@ double calculateFinishTime(const Batch& batch, const int& machineId, const Machi
 
     for (const auto& partInfo : batch.parts)
     {
-        volumeTime += partInfo.PartType->Volume * machine->ScanTime;
-        maxHeight = std::max(maxHeight, partInfo.PartType->Height);
+        volumeTime += partInfo.partType->Volume * machine->ScanTime;
+        maxHeight = std::max(maxHeight, partInfo.partType->Height);
     }
 
     double heightTime = maxHeight * machine->RecoatTime;
@@ -294,12 +294,11 @@ bool canAddToBatchOrNeedNewBatch(const Batch& batch, int machineId, const Machin
 
     for (const auto& partInfo : batch.parts)
     {
-        volumeTime += partInfo.PartType->Volume * machine->ScanTime;
-        maxHeight = std::max(maxHeight, partInfo.PartType->Height);
+        volumeTime += partInfo.partType->Volume * machine->ScanTime;
+        maxHeight = std::max(maxHeight, partInfo.partType->Height);
     }
 
     double heightTime = maxHeight * machine->RecoatTime;
-
     return volumeTime < heightTime;
 }
 struct AllocationResult {
@@ -317,7 +316,7 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
     if (remainingMaterials.find(selectedMaterial) != remainingMaterials.end()) {
         auto& materialList = remainingMaterials[selectedMaterial];
         for (auto it = materialList.begin(); it != materialList.end();) {
-            double partArea = it->PartType->Area;
+            double partArea = it->partType->Area;
 
 
             if (newBatch.totalArea + partArea <= selectedMachineBatch.MachineArea) {
@@ -330,7 +329,7 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
 
 
                 if (canAddToBatchOrNeedNewBatch(newBatch, selectedMachineBatch.MachineId, machine) &&
-                    it->OrderInfo.DueDate < finishTime) {
+                    it->orderInfo.DueDate < finishTime) {
 
                     it = materialList.erase(it);
                 }
@@ -390,8 +389,8 @@ int selectEarliestMaterial(const std::map<int, std::vector<PartTypeOrderInfo>>& 
     {
         if (!materialEntry.second.empty())
         {
-            const auto& orderInfo = materialEntry.second.front().OrderInfo;
-            const auto& partType = materialEntry.second.front().PartType;
+            const auto& orderInfo = materialEntry.second.front().orderInfo;
+            const auto& partType = materialEntry.second.front().partType;
             if (orderInfo.DueDate < earliestDueDate ||
                 (orderInfo.DueDate == earliestDueDate && orderInfo.PenaltyCost > highestPenaltyCost) ||
                 (orderInfo.DueDate == earliestDueDate && orderInfo.PenaltyCost == highestPenaltyCost && partType->Area > largestArea))
@@ -428,10 +427,10 @@ double calculateWeightedDelay(const Batch& batch, double runningTime)
 
     for (const auto& partInfo : batch.parts)
     {
-        double delayTime = runningTime - partInfo.OrderInfo.DueDate;
+        double delayTime = runningTime - partInfo.orderInfo.DueDate;
         if (delayTime > 0)
         {
-            weightedDelay += delayTime * partInfo.OrderInfo.PenaltyCost;
+            weightedDelay += delayTime * partInfo.orderInfo.PenaltyCost;
         }
     }
 
@@ -504,7 +503,7 @@ std::vector<MachineBatch> createMachineBatches(
             machineBatchRef.RunningTime
         };
 
-        machineBatchRef.DelayedBatchInfo.push_back(delayedInfo);
+        machineBatchRef.delayedBatchInfo.push_back(delayedInfo);
         machineBatchRef.TotalWeightedDelay += delayedInfo.WeightedDelay;
 
         updateRemainingMaterials(remainingMaterials, selectedMaterial);
@@ -521,13 +520,13 @@ std::vector<DelayedBatch> extractDelayedBatches(std::vector<MachineBatch>& machi
 
     for (auto& machineBatch : machineBatches) {
 
-        for (int i = machineBatch.DelayedBatchInfo.size() - 1; i >= 0; i--) {
-            const auto& delayedInfo = machineBatch.DelayedBatchInfo[i];
+        for (int i = machineBatch.delayedBatchInfo.size() - 1; i >= 0; i--) {
+            const auto& delayedInfo = machineBatch.delayedBatchInfo[i];
             if (delayedInfo.WeightedDelay > 0) {
                 DelayedBatch delayedBatch;
                 delayedBatch.batch = machineBatch.Batches[delayedInfo.BatchIndex - 1];
-                delayedBatch.time = machineBatch.DelayedBatchInfo[delayedInfo.BatchIndex - 1].thisBatchTime;
-                delayedBatch.WeightedDelay = machineBatch.DelayedBatchInfo[delayedInfo.BatchIndex - 1].WeightedDelay;
+                delayedBatch.time = machineBatch.delayedBatchInfo[delayedInfo.BatchIndex - 1].thisBatchTime;
+                delayedBatch.WeightedDelay = machineBatch.delayedBatchInfo[delayedInfo.BatchIndex - 1].WeightedDelay;
                 delayedBatches.push_back(delayedBatch);
 
                 machineBatch.Batches.erase(machineBatch.Batches.begin() + delayedInfo.BatchIndex - 1);
@@ -553,7 +552,7 @@ void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pai
         }
     }
 
-    machineBatch.DelayedBatchInfo.clear();
+    machineBatch.delayedBatchInfo.clear();
 
     for (const auto& batch : machineBatch.Batches) {
         double finishTime = calculateFinishTime(batch, machineBatch.MachineId, machine);
@@ -566,7 +565,7 @@ void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pai
             dbInfo.BatchIndex = &batch - &machineBatch.Batches[0] + 1;
             dbInfo.WeightedDelay = batchDelay;
             dbInfo.thisBatchTime = machineBatch.RunningTime;
-            machineBatch.DelayedBatchInfo.push_back(dbInfo);
+            machineBatch.delayedBatchInfo.push_back(dbInfo);
         }
     }
 
@@ -575,11 +574,11 @@ void updateMachineBatches(MachineBatch& machineBatch, const std::vector<std::pai
 
 
 bool compareDelayedBatches(const DelayedBatch& a, const DelayedBatch& b) {
-    const auto& partA = a.batch.parts.front().OrderInfo;
-    const auto& partB = b.batch.parts.front().OrderInfo;
+    const auto& partA = a.batch.parts.front().orderInfo;
+    const auto& partB = b.batch.parts.front().orderInfo;
 
-    const auto& AreaA = a.batch.parts.front().PartType->Area;
-    const auto& AreaB = b.batch.parts.front().PartType->Area;
+    const auto& AreaA = a.batch.parts.front().partType->Area;
+    const auto& AreaB = b.batch.parts.front().partType->Area;
 
     if (partA.DueDate != partB.DueDate)
         return partA.DueDate < partB.DueDate;
@@ -639,7 +638,7 @@ void insertBatch(MachineBatch* machineBatch, int position, DelayedBatch& delayed
 
     machineBatch->RunningTime = 0.0;
     machineBatch->TotalWeightedDelay = 0.0;
-    machineBatch->DelayedBatchInfo.clear();
+    machineBatch->delayedBatchInfo.clear();
 
     int lastMaterial = -1;
     for (size_t i = 0; i < machineBatch->Batches.size(); ++i) {
@@ -682,7 +681,7 @@ void insertBatch(MachineBatch* machineBatch, int position, DelayedBatch& delayed
             dbInfo.WeightedDelay = batchDelay;
             dbInfo.thisBatchTime = machineBatch->RunningTime;
             dbInfo.newPosition = position; // 这个可能需要根据您的具体逻辑进行调整
-            machineBatch->DelayedBatchInfo.push_back(dbInfo);
+            machineBatch->delayedBatchInfo.push_back(dbInfo);
         }
 
         lastMaterial = currentBatch.materialType; // 更新材料类型
@@ -714,39 +713,37 @@ void insertLastBatch(std::vector<MachineBatch>& machineBatches, DelayedBatch& la
 }
 
 void reintegrateDelayedBatches(std::vector<MachineBatch>& machineBatches, std::vector<DelayedBatch>& delayedBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    while (!delayedBatches.empty()) {
-        std::sort(delayedBatches.begin(), delayedBatches.end(), compareDelayedBatches);
+    auto it = delayedBatches.begin();
+    while (it != delayedBatches.end()) {
+        DelayedBatch& currentBatch = *it;
 
-        for (size_t j = 0; j < delayedBatches.size(); ++j) {
-            DelayedBatch& currentBatch = delayedBatches[j];
+        double bestAdditionalDelay = std::numeric_limits<double>::max();
+        MachineBatch* bestMachineBatch = nullptr;
+        int bestPosition = -1;
 
-            double bestAdditionalDelay = std::numeric_limits<double>::max();
-            MachineBatch* bestMachineBatch = nullptr;
-            int bestPosition = -1;
-
-            // 遍历机器批次以找到最佳插入点
-            for (auto& machineBatch : machineBatches) {
-                for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
-                    double trialDelay = tryInsertBatch(machineBatch, currentBatch.batch, i, sortedMachines);
-                    double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
-                    if (additionalDelay < bestAdditionalDelay) {
-                        bestAdditionalDelay = additionalDelay;
-                        bestMachineBatch = &machineBatch;
-                        bestPosition = i;
-                    }
+        // 遍历机器批次以找到最佳插入点
+        for (auto& machineBatch : machineBatches) {
+            for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
+                double trialDelay = tryInsertBatch(machineBatch, currentBatch.batch, i, sortedMachines);
+                double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
+                if (additionalDelay < bestAdditionalDelay) {
+                    bestAdditionalDelay = additionalDelay;
+                    bestMachineBatch = &machineBatch;
+                    bestPosition = i;
                 }
             }
+        }
 
-            // 决定插入批次
-            if (bestMachineBatch && bestPosition >= 0) {
-                insertBatch(bestMachineBatch, bestPosition, currentBatch, sortedMachines);
-                delayedBatches.erase(delayedBatches.begin() + j);
-                --j; // 调整索引以反映删除的批次
-            }
+        // 决定插入批次
+        if (bestMachineBatch && bestPosition >= 0) {
+            insertBatch(bestMachineBatch, bestPosition, currentBatch, sortedMachines);
+            it = delayedBatches.erase(it); // 删除已插入的批次并更新迭代器
+        }
+        else {
+            ++it; // 如果未插入，则继续下一个
         }
     }
 }
-
 
 
 
@@ -788,16 +785,19 @@ std::vector<DelayedBatch> extractRandomBatchesIncludingMaxDelay(const std::vecto
     return extractedBatches;
 }
 
+
 std::vector<PartTypeOrderInfo> extractAndRandomSelectParts(std::vector<MachineBatch>& machineBatches) {
     std::vector<PartTypeOrderInfo> allDelayedParts;
     DelayedBatch maxDelayBatch;
     double maxWeightedDelay = 0;
 
-    // 从 machineBatches 中提取所有延迟零件
+    // 從 machineBatches 中提取所有延遲零件
     for (auto& machineBatch : machineBatches) {
-        for (auto& delayedInfo : machineBatch.DelayedBatchInfo) {
+        for (auto& delayedInfo : machineBatch.delayedBatchInfo) {
             if (delayedInfo.WeightedDelay > 0) {
                 Batch& delayedBatch = machineBatch.Batches[delayedInfo.BatchIndex];
+                // 添加調試信息
+
                 allDelayedParts.insert(allDelayedParts.end(), delayedBatch.parts.begin(), delayedBatch.parts.end());
 
                 if (delayedInfo.WeightedDelay > maxWeightedDelay) {
@@ -813,13 +813,13 @@ std::vector<PartTypeOrderInfo> extractAndRandomSelectParts(std::vector<MachineBa
     std::uniform_int_distribution<int> dist(1, allDelayedParts.size());
     int beta = dist(g);
 
-    // 从加权延迟最大批次中选择延迟零件
+    // 從加權延遲最大批次中選擇延遲零件
     std::vector<PartTypeOrderInfo> selectedParts;
     if (!maxDelayBatch.batch.parts.empty()) {
         selectedParts.push_back(maxDelayBatch.batch.parts.front());
     }
 
-    // 从所有延迟零件中随机选择其余零件
+    // 從所有延遲零件中隨機選擇其餘零件
     std::shuffle(allDelayedParts.begin(), allDelayedParts.end(), g);
 
     while (selectedParts.size() < beta && !allDelayedParts.empty()) {
@@ -829,6 +829,7 @@ std::vector<PartTypeOrderInfo> extractAndRandomSelectParts(std::vector<MachineBa
 
     return selectedParts;
 }
+
 void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatches, const std::vector<PartTypeOrderInfo>& extractedParts, const std::vector<std::pair<int, Machine>>& sortedMachines) {
 
     std::set<int> batchesToRemove;
@@ -839,8 +840,8 @@ void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatch
 
             for (auto& part : batch.parts) {
                 if (std::find_if(extractedParts.begin(), extractedParts.end(), [&part](const PartTypeOrderInfo& extractedPart) {
-                    return extractedPart.PartType->PartTypeId == part.PartType->PartTypeId &&
-                        extractedPart.OrderInfo.OrderId == part.OrderInfo.OrderId;
+                    return extractedPart.partType->PartTypeId == part.partType->PartTypeId &&
+                        extractedPart.orderInfo.OrderId == part.orderInfo.OrderId;
                     }) != extractedParts.end()) {
                     batchesToRemove.insert(i);
                     break;
@@ -859,22 +860,35 @@ void updateMachineBatchesAfterExtraction(std::vector<MachineBatch>& machineBatch
 }
 
 bool partComparator(const PartTypeOrderInfo& a, const PartTypeOrderInfo& b) {
-    if (a.OrderInfo.DueDate != b.OrderInfo.DueDate)
-        return a.OrderInfo.DueDate < b.OrderInfo.DueDate;
-    if (a.OrderInfo.PenaltyCost != b.OrderInfo.PenaltyCost)
-        return a.OrderInfo.PenaltyCost > b.OrderInfo.PenaltyCost;
-    if (a.PartType->Volume != b.PartType->Volume)
-        return a.PartType->Volume > b.PartType->Volume;
-    return std::rand() > std::rand(); // 随机返回 true 或 false
+    if (a.orderInfo.DueDate != b.orderInfo.DueDate)
+        return a.orderInfo.DueDate < b.orderInfo.DueDate;
+    if (a.orderInfo.PenaltyCost != b.orderInfo.PenaltyCost)
+        return a.orderInfo.PenaltyCost > b.orderInfo.PenaltyCost;
+
+    // 檢查空指針
+    if (a.partType != nullptr && b.partType != nullptr) {
+        if (a.partType->Volume != b.partType->Volume)
+            return a.partType->Volume > b.partType->Volume;
+    } else {
+        if (a.partType == nullptr)
+            return false; // 將 a 視為小於 b
+        if (b.partType == nullptr)
+            return true;  // 將 a 視為大於 b
+    }
+    
+
+    return false; // 如果所有條件都相等，則保持它們的順序不變
 }
+
 bool canInsertPartToBatch(const PartTypeOrderInfo& partInfo, const Batch& batch, const Machine& machine) {
     if (partInfo.Material != batch.materialType) {
         return false;
     }
-    double newTotalArea = batch.totalArea + partInfo.PartType->Area;
+    double newTotalArea = batch.totalArea + partInfo.partType->Area;
     if (newTotalArea > machine.Area) {
         return false;
     }
+
     return true;
 }
 
@@ -917,18 +931,20 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
         const Machine& machine = findMachineById(sortedMachines, machineBatch.MachineId);
 
         for (int batchIndex = 0; batchIndex < machineBatch.Batches.size(); ++batchIndex) {
+
             Batch& batch = machineBatch.Batches[batchIndex];
-
             double finishTime = calculateFinishTime(batch, machineBatch.MachineId, &machine);
-            if (canInsertPartToBatch(partInfo, batch, machine) && !canAddToBatchOrNeedNewBatch(batch, machine.MachineId, &machine) ||
-                partInfo.OrderInfo.DueDate >= finishTime) {
-                MachineBatch tempMachineBatch = machineBatch;
-                tempMachineBatch.Batches[batchIndex].parts.push_back(partInfo);
-                tempMachineBatch.Batches[batchIndex].totalArea += partInfo.PartType->Area;
 
+            if (canInsertPartToBatch(partInfo, batch, machine) && !canAddToBatchOrNeedNewBatch(batch, machine.MachineId, &machine) ||
+                partInfo.orderInfo.DueDate >= finishTime) {
+
+                MachineBatch tempMachineBatch = machineBatch;
+                std::vector<PartTypeOrderInfo> tempParts; // 临时的vector用于存放单个partInfo
+                tempParts.push_back(partInfo);
+                tempMachineBatch.Batches[batchIndex].parts = tempParts;
+                tempMachineBatch.Batches[batchIndex].totalArea += partInfo.partType->Area;
                 updateMachineBatches(tempMachineBatch, sortedMachines);
                 double additionalDelay = tempMachineBatch.TotalWeightedDelay - machineBatch.TotalWeightedDelay;
-
                 if (additionalDelay < bestAdditionalDelay) {
                     bestAdditionalDelay = additionalDelay;
                     bestMachineIndex = machineIndex;
@@ -937,15 +953,16 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
             }
         }
     }
-
     return std::make_tuple(bestMachineIndex, bestBatchIndex);
 }
 
 // 在找到的最佳批次位置插入零件
 void insertPartAtPosition(MachineBatch& machineBatch, int batchIndex, const PartTypeOrderInfo& partInfo, const std::vector<std::pair<int, Machine>>& sortedMachines) {
     // 在批次中添加部件
-    machineBatch.Batches[batchIndex].parts.push_back(partInfo);
-    machineBatch.Batches[batchIndex].totalArea += partInfo.PartType->Area;
+    std::vector<PartTypeOrderInfo> tempParts; // 临时的vector用于存放单个partInfo
+    tempParts.push_back(partInfo);
+    machineBatch.Batches[batchIndex].parts = tempParts;
+    machineBatch.Batches[batchIndex].totalArea += partInfo.partType->Area;
 
     // 更新机器批次的运行时间和总加权延迟
     updateMachineBatches(machineBatch, sortedMachines);
@@ -958,41 +975,70 @@ void insertPartAtPosition(MachineBatch& machineBatch, int batchIndex, const Part
         dbInfo.WeightedDelay = batchDelay;
         dbInfo.thisBatchTime = machineBatch.RunningTime;
         dbInfo.newPosition = batchIndex;  // 插入的位置
-        machineBatch.DelayedBatchInfo.push_back(dbInfo);
+        machineBatch.delayedBatchInfo.push_back(dbInfo);
     }
 }
 
+int findMachineBatchIndexByMachineId(const std::vector<MachineBatch>& machineBatches, int machineId) {
+    auto it = std::find_if(machineBatches.begin(), machineBatches.end(),
+        [machineId](const MachineBatch& mb) {
+            return mb.MachineId == machineId;
+        });
+    if (it != machineBatches.end()) {
+        return std::distance(machineBatches.begin(), it);
+    }
+    return -1; // 或者抛出异常
+}
+void printPartTypeOrderInfos(const std::vector<PartTypeOrderInfo>& partTypeOrderInfos) {
+    for (const auto& partInfo : partTypeOrderInfos) {
+        std::cout << "Material: " << partInfo.Material << std::endl;
+        std::cout << "Order Info - Order ID: " << partInfo.orderInfo.OrderId << std::endl; // 假设 OrderInfo 结构有一个 OrderId 成员
+        if (partInfo.partType != nullptr) {
+            // 假设 PartType 结构有 PartTypeId 和 Area 成员
+            std::cout << "Part Type Info - Part Type ID: " << partInfo.partType->PartTypeId << std::endl;
+            std::cout << "Part Type Info - Area: " << partInfo.partType->Area << std::endl;
+        }
+        else {
+            std::cout << "Part Type Info is nullptr" << std::endl;
+        }
+        std::cout << "----------------------------------" << std::endl;
+    }
+}
 
 void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines, std::vector<PartTypeOrderInfo>& parts) {
     // 对 parts 按照 DueDate, PenaltyCost, Volume 排序
+
     std::sort(parts.begin(), parts.end(), partComparator);
 
     for (auto& partInfo : parts) {
+   
+
         int bestMachineIndex, bestPosition;
         std::tie(bestMachineIndex, bestPosition) = findBestInsertionPosition(machineBatches, partInfo, sortedMachines);
 
-        // 如果找到了最佳位置，就将零件插入到最佳位置
         if (bestMachineIndex != -1 && bestPosition != -1) {
             insertPartAtPosition(machineBatches[bestMachineIndex], bestPosition, partInfo, sortedMachines);
         }
         else {
-            // 如果没有合适的批次可以插入，就在最佳的机器上创建新批次
-            int machineIndexToInsert = selectMachineWithLeastRunningTime(machineBatches);
+            int machineIdToInsert = selectMachineWithLeastRunningTime(machineBatches);
+            int machineIndexToInsert = findMachineBatchIndexByMachineId(machineBatches, machineIdToInsert);
+
             MachineBatch& machineBatchToInsert = machineBatches[machineIndexToInsert];
             Batch newBatch;
-            newBatch.materialType = partInfo.Material;
-            newBatch.parts.push_back(partInfo); // 添加这个新零件到新批次
-            newBatch.totalArea = partInfo.PartType->Area; // 新批次的总面积等于零件的面积
 
-            // 确保新批次不超过机器的总面积
-            if (newBatch.totalArea <= findMachineById(sortedMachines, machineBatchToInsert.MachineId).Area) {
+            newBatch.materialType = partInfo.Material;
+            std::vector<PartTypeOrderInfo> tempParts; // 临时的vector用于存放单个partInfo
+            tempParts.push_back(partInfo);
+            newBatch.parts = tempParts;
+            newBatch.totalArea = partInfo.partType->Area;// 新批次的总面积等于零件的面积
+            const Machine& machineToInsert = findMachineById(sortedMachines, machineIdToInsert);
+            if (newBatch.totalArea <= machineToInsert.Area) {
                 machineBatchToInsert.Batches.push_back(newBatch); // 将新批次添加到机器批次中
                 updateMachineBatches(machineBatchToInsert, sortedMachines); // 更新机器批次信息
             }
         }
     }
 }
-
 
 
 
@@ -1013,13 +1059,13 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstr
             outFile << "  Parts:\n";
             for (const auto& part : batch.parts)
             {
-                outFile << "    Part Type ID: " << part.PartType->PartTypeId << "\n";
-                outFile << "    Order ID: " << part.OrderInfo.OrderId << "\n";
+                outFile << "    Part Type ID: " << part.partType->PartTypeId << "\n";
+                outFile << "    Order ID: " << part.orderInfo.OrderId << "\n";
             }
         }
 
         outFile << "Delayed Batches:\n";
-        for (const auto& delayedBatch : machineBatch.DelayedBatchInfo)
+        for (const auto& delayedBatch : machineBatch.delayedBatchInfo)
         {
             outFile << "  Batch Index: " << delayedBatch.BatchIndex << "\n";
             outFile << "  Weighted Delay: " << delayedBatch.WeightedDelay << "\n";
@@ -1037,6 +1083,8 @@ double sumTotalWeightedDelay(const std::vector<MachineBatch>& machineBatches)
     {
         total += batch.TotalWeightedDelay;
     }
+
+
     return total;
 }
 
@@ -1048,11 +1096,13 @@ void printDelayedBatches(const std::vector<DelayedBatch>& delayedBatches, std::o
         outFile << "Batch TIme: " << delayedBatch.time << "\n";
         outFile << "Parts:\n";
         for (const auto& part : delayedBatch.batch.parts) {
-            outFile << "  Part Type ID: " << part.PartType->PartTypeId << "\n";
-            outFile << "  Order ID: " << part.OrderInfo.OrderId << "\n";
+            outFile << "  Part Type ID: " << part.partType->PartTypeId << "\n";
+            outFile << "  Order ID: " << part.orderInfo.OrderId << "\n";
         }
     }
 }
+
+
 void read_json(const std::string& file_path, std::ofstream& outFile)
 {
     std::ifstream file(file_path);
@@ -1121,7 +1171,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         {
             OrderDetail od;
             int partTypeId = detailValue["PartType"];
-            od.PartType = &partTypes[partTypeId]; // Reference to PartType structure
+            od.partType = &partTypes[partTypeId]; // Reference to PartType structure
             od.Quantity = detailValue["Quantity"];
             od.Material = detailValue["Material"];
             od.Quality = detailValue["Quality"];
@@ -1135,7 +1185,6 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
     auto sortedMaterials = sortMaterialClassifiedOrderDetails(materialClassifiedOrderDetails, orders, partTypes);
 
     auto finalSorted = generateFinalSortedPartTypes(sortedMaterials, orders, partTypes);
-    std::cout << "Here " << std::endl;
     auto machineBatches = createMachineBatches(finalSorted, sortedMachines);
 
     printMachineBatch(machineBatches, outFile);
@@ -1154,7 +1203,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
             updateMachineBatches(machineBatch, sortedMachines);
         }
         outFile << "----------------------------------" << "\n";
-        // printMachineBatch(machineBatches, outFile);
+        printMachineBatch(machineBatches, outFile);
         std::vector<DelayedBatch> delayedBatchesList = extractRandomBatchesIncludingMaxDelay(delayedBatches);
         outFile << "隨機抽取 : " << "\n";
         outFile << "----------------------------------" << "\n";
@@ -1168,22 +1217,17 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         outFile << "----------------------------------" << "\n";
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
-
         double result2 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第2次初始解 : " << result2 << "\n";
         outFile << "----------------------------------" << "\n";
 
         //TODO：
         std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
-
         updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
-
         sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
-
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
         double result3 = sumTotalWeightedDelay(machineBatches);
-
         outFile << "  第3次初始解 : " << result3 << "\n";
         outFile << "----------------------------------" << "\n";
 
