@@ -11,7 +11,8 @@
 #include <string>
 #include <random>
 #include <iterator> 
-
+#include <cstdlib> 
+#include <ctime>   
 
 
 using json = nlohmann::json;
@@ -865,19 +866,18 @@ bool partComparator(const PartTypeOrderInfo& a, const PartTypeOrderInfo& b) {
     if (a.orderInfo.PenaltyCost != b.orderInfo.PenaltyCost)
         return a.orderInfo.PenaltyCost > b.orderInfo.PenaltyCost;
 
-    // 檢查空指針
     if (a.partType != nullptr && b.partType != nullptr) {
         if (a.partType->Volume != b.partType->Volume)
             return a.partType->Volume > b.partType->Volume;
-    } else {
-        if (a.partType == nullptr)
-            return false; // 將 a 視為小於 b
-        if (b.partType == nullptr)
-            return true;  // 將 a 視為大於 b
     }
-    
+    else {
+        if (a.partType == nullptr)
+            return false;
+        if (b.partType == nullptr)
+            return true;
+    }
 
-    return false; // 如果所有條件都相等，則保持它們的順序不變
+    return false;
 }
 
 bool canInsertPartToBatch(const PartTypeOrderInfo& partInfo, const Batch& batch, const Machine& machine) {
@@ -1007,17 +1007,18 @@ void printPartTypeOrderInfos(const std::vector<PartTypeOrderInfo>& partTypeOrder
 
 void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines, std::vector<PartTypeOrderInfo>& parts) {
     // 对 parts 按照 DueDate, PenaltyCost, Volume 排序
-
+    std::cout << "4.1" << std::endl;
     std::sort(parts.begin(), parts.end(), partComparator);
-
+    std::cout << "4.2" << std::endl;
     for (auto& partInfo : parts) {
-   
 
         int bestMachineIndex, bestPosition;
         std::tie(bestMachineIndex, bestPosition) = findBestInsertionPosition(machineBatches, partInfo, sortedMachines);
-
+        std::cout << "4.3" << std::endl;
         if (bestMachineIndex != -1 && bestPosition != -1) {
+
             insertPartAtPosition(machineBatches[bestMachineIndex], bestPosition, partInfo, sortedMachines);
+            std::cout << "4.4" << std::endl;
         }
         else {
             int machineIdToInsert = selectMachineWithLeastRunningTime(machineBatches);
@@ -1031,6 +1032,7 @@ void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::ve
             tempParts.push_back(partInfo);
             newBatch.parts = tempParts;
             newBatch.totalArea = partInfo.partType->Area;// 新批次的总面积等于零件的面积
+            std::cout << "4.5" << std::endl;
             const Machine& machineToInsert = findMachineById(sortedMachines, machineIdToInsert);
             if (newBatch.totalArea <= machineToInsert.Area) {
                 machineBatchToInsert.Batches.push_back(newBatch); // 将新批次添加到机器批次中
@@ -1216,15 +1218,20 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         outFile << " 插入後 : " << "\n";
         outFile << "----------------------------------" << "\n";
         printMachineBatch(machineBatches, outFile);
+        std::cout << "1" << std::endl;
         outFile << "----------------------------------" << "\n";
         double result2 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第2次初始解 : " << result2 << "\n";
         outFile << "----------------------------------" << "\n";
-
+        std::cout << "2" << std::endl;
         //TODO：
+
         std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
+        std::cout << "3" << std::endl;
         updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
+        std::cout << "4" << std::endl;
         sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
+        std::cout << "5" << std::endl;
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
         double result3 = sumTotalWeightedDelay(machineBatches);
