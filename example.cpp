@@ -1100,7 +1100,7 @@ void printDelayedBatches(const std::vector<DelayedBatch>& delayedBatches, std::o
 }
 
 
-void read_json(const std::string& file_path, std::ofstream& outFile)
+void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstream& allTestFile)
 {
     std::ifstream file(file_path);
     json j;
@@ -1191,6 +1191,8 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
     outFile << "  初始解 : " << result << "\n"; //step 6.
     outFile << "----------------------------------" << "\n";
 
+    double result2 = -1.0, result3 = -1.0;
+    
     if (result != 0) {
 
         std::vector<DelayedBatch> delayedBatches = extractDelayedBatches(machineBatches);
@@ -1214,7 +1216,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         outFile << "----------------------------------" << "\n";
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
-        double result2 = sumTotalWeightedDelay(machineBatches);
+        result2 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第2次初始解 : " << result2 << "\n";
         outFile << "----------------------------------" << "\n";
         //TODO：
@@ -1224,12 +1226,23 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
         sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
         printMachineBatch(machineBatches, outFile);
         outFile << "----------------------------------" << "\n";
-        double result3 = sumTotalWeightedDelay(machineBatches);
+        result3 = sumTotalWeightedDelay(machineBatches);
         outFile << "  第3次初始解 : " << result3 << "\n";
         outFile << "----------------------------------" << "\n";
 
+
     }
 
+    outFile << "結果 : " << "\n";
+    outFile << "  初始解 : " << result << "\n";
+    outFile << "  第2次初始解 : " << result2 << "\n";
+    outFile << "  第3次初始解 : " << result3 << "\n";
+    outFile << "**********************************" << "\n";
+
+    allTestFile << "檔案 名稱: " << file_path.substr(file_path.find_last_of("/\\") + 1) << "\n";
+    allTestFile << "  初始解 : " << result << "\n";
+    allTestFile << "  第2次初始解 : " << result2 << "\n";
+    allTestFile << "  第3次初始解 : " << result3 << "\n\n";
 
 }
 
@@ -1237,6 +1250,8 @@ void read_json(const std::string& file_path, std::ofstream& outFile)
 int main() {
     WIN32_FIND_DATAA findFileData;
     HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test/*.json", &findFileData);
+
+    std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
@@ -1250,13 +1265,15 @@ int main() {
             std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
             std::ofstream outFile(outputFileName);
 
-            read_json(fullPath, outFile);
+            read_json(fullPath, outFile, allTestFile); // 傳遞 allTestFile 給 read_json
 
             outFile.close();
 
         } while (FindNextFileA(hFind, &findFileData) != 0);
         FindClose(hFind);
     }
+
+    allTestFile.close(); // 關閉全局結果文件
+
     return 0;
 }
-
