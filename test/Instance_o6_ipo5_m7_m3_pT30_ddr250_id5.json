@@ -1,0 +1,490 @@
+{
+    "InstanceID": 5,
+    "SeedValue": 2362,
+    "nOrders": 6,
+    "nItemsPerOrder": 5,
+    "nTotalItems": 30,
+    "nMachines": 7,
+    "nMaterials": 3,
+    "PercentageOfTardyOrders": 0.3,
+    "DueDateRange": 2.5,
+    "Machines": {
+        "0": {
+            "MachineId": 0,
+            "Area": 1000.0,
+            "Height": 34.49,
+            "Length": 1000.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.45,
+                    1.92,
+                    1.73
+                ],
+                [
+                    1.13,
+                    1.48,
+                    1.7
+                ],
+                [
+                    1.48,
+                    1.58,
+                    1.08
+                ]
+            ],
+            "StartSetup": [
+                1.009,
+                1.373,
+                1.31
+            ],
+            "ScanTime": 0.034,
+            "RecoatTime": 0.52,
+            "RemovalTime": 0
+        },
+        "1": {
+            "MachineId": 1,
+            "Area": 900.0,
+            "Height": 27.81,
+            "Length": 900.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.47,
+                    1.6,
+                    1.23
+                ],
+                [
+                    1.84,
+                    1.54,
+                    1.28
+                ],
+                [
+                    1.68,
+                    1.17,
+                    1.81
+                ]
+            ],
+            "StartSetup": [
+                1.402,
+                1.013,
+                1.068
+            ],
+            "ScanTime": 0.03,
+            "RecoatTime": 0.5,
+            "RemovalTime": 0
+        },
+        "2": {
+            "MachineId": 2,
+            "Area": 800.0,
+            "Height": 31.07,
+            "Length": 800.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.26,
+                    1.53,
+                    1.93
+                ],
+                [
+                    1.16,
+                    1.73,
+                    1.55
+                ],
+                [
+                    1.8,
+                    1.14,
+                    1.09
+                ]
+            ],
+            "StartSetup": [
+                1.215,
+                1.039,
+                1.451
+            ],
+            "ScanTime": 0.036,
+            "RecoatTime": 0.57,
+            "RemovalTime": 0
+        },
+        "3": {
+            "MachineId": 3,
+            "Area": 1200.0,
+            "Height": 28.22,
+            "Length": 1200.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.66,
+                    1.81,
+                    1.89
+                ],
+                [
+                    1.09,
+                    1.21,
+                    1.32
+                ],
+                [
+                    1.58,
+                    1.23,
+                    1.97
+                ]
+            ],
+            "StartSetup": [
+                1.096,
+                1.432,
+                1.382
+            ],
+            "ScanTime": 0.031,
+            "RecoatTime": 0.56,
+            "RemovalTime": 0
+        },
+        "4": {
+            "MachineId": 4,
+            "Area": 800.0,
+            "Height": 25.15,
+            "Length": 800.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.85,
+                    1.81,
+                    1.51
+                ],
+                [
+                    1.28,
+                    1.28,
+                    1.63
+                ],
+                [
+                    1.59,
+                    1.74,
+                    1.58
+                ]
+            ],
+            "StartSetup": [
+                1.332,
+                1.479,
+                1.401
+            ],
+            "ScanTime": 0.04,
+            "RecoatTime": 0.53,
+            "RemovalTime": 0
+        },
+        "5": {
+            "MachineId": 5,
+            "Area": 800.0,
+            "Height": 30.34,
+            "Length": 800.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.7,
+                    1.9,
+                    1.83
+                ],
+                [
+                    1.78,
+                    1.0,
+                    1.52
+                ],
+                [
+                    1.2,
+                    1.61,
+                    1.46
+                ]
+            ],
+            "StartSetup": [
+                1.012,
+                1.338,
+                1.435
+            ],
+            "ScanTime": 0.03,
+            "RecoatTime": 0.6,
+            "RemovalTime": 0
+        },
+        "6": {
+            "MachineId": 6,
+            "Area": 800.0,
+            "Height": 25.65,
+            "Length": 800.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.21,
+                    1.81,
+                    1.11
+                ],
+                [
+                    1.58,
+                    1.03,
+                    1.37
+                ],
+                [
+                    1.38,
+                    1.64,
+                    1.91
+                ]
+            ],
+            "StartSetup": [
+                1.282,
+                1.313,
+                1.456
+            ],
+            "ScanTime": 0.03,
+            "RecoatTime": 0.53,
+            "RemovalTime": 0
+        }
+    },
+    "PartTypes": {
+        "0": {
+            "Height": 13.87,
+            "Length": 71.15,
+            "Width": 1,
+            "Area": 71.15,
+            "Volume": 670.69
+        },
+        "1": {
+            "Height": 13.09,
+            "Length": 99.36,
+            "Width": 1,
+            "Area": 99.36,
+            "Volume": 285.37
+        },
+        "2": {
+            "Height": 18.99,
+            "Length": 89.68,
+            "Width": 1,
+            "Area": 89.68,
+            "Volume": 683.06
+        },
+        "3": {
+            "Height": 13.09,
+            "Length": 99.36,
+            "Width": 1,
+            "Area": 99.36,
+            "Volume": 285.37
+        },
+        "4": {
+            "Height": 19.14,
+            "Length": 33.58,
+            "Width": 1,
+            "Area": 33.58,
+            "Volume": 164.78
+        },
+        "5": {
+            "Height": 19.14,
+            "Length": 33.58,
+            "Width": 1,
+            "Area": 33.58,
+            "Volume": 164.78
+        },
+        "6": {
+            "Height": 10.77,
+            "Length": 269.75,
+            "Width": 1,
+            "Area": 269.75,
+            "Volume": 1928.6
+        },
+        "7": {
+            "Height": 7.42,
+            "Length": 39.91,
+            "Width": 1,
+            "Area": 39.91,
+            "Volume": 70.69
+        },
+        "8": {
+            "Height": 30.8,
+            "Length": 149.8,
+            "Width": 1,
+            "Area": 149.8,
+            "Volume": 1650.23
+        },
+        "9": {
+            "Height": 14.05,
+            "Length": 284.65,
+            "Width": 1,
+            "Area": 284.65,
+            "Volume": 876.28
+        }
+    },
+    "Orders": {
+        "0": {
+            "OrderId": 0,
+            "DueDate": 17.71,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.36,
+            "OrderList": [
+                {
+                    "PartType": 7,
+                    "Quantity": 2,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 7,
+                    "Quantity": 3,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "1": {
+            "OrderId": 1,
+            "DueDate": 39.3,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.05,
+            "OrderList": [
+                {
+                    "PartType": 5,
+                    "Quantity": 3,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 4,
+                    "Quantity": 2,
+                    "Material": 0,
+                    "Quality": 0
+                }
+            ]
+        },
+        "2": {
+            "OrderId": 2,
+            "DueDate": 74.74,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.49,
+            "OrderList": [
+                {
+                    "PartType": 0,
+                    "Quantity": 3,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 6,
+                    "Quantity": 1,
+                    "Material": 0,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 7,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                }
+            ]
+        },
+        "3": {
+            "OrderId": 3,
+            "DueDate": 57.12,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.67,
+            "OrderList": [
+                {
+                    "PartType": 0,
+                    "Quantity": 2,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 8,
+                    "Quantity": 1,
+                    "Material": 0,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 0,
+                    "Quantity": 2,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "4": {
+            "OrderId": 4,
+            "DueDate": -11.28,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.28,
+            "OrderList": [
+                {
+                    "PartType": 4,
+                    "Quantity": 2,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 2,
+                    "Quantity": 2,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 5,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "5": {
+            "OrderId": 5,
+            "DueDate": 28.39,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.1,
+            "OrderList": [
+                {
+                    "PartType": 3,
+                    "Quantity": 3,
+                    "Material": 0,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 1,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 6,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                }
+            ]
+        }
+    }
+}

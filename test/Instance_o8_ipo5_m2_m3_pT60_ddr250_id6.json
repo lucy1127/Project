@@ -1,0 +1,339 @@
+{
+    "InstanceID": 6,
+    "SeedValue": 2160,
+    "nOrders": 8,
+    "nItemsPerOrder": 5,
+    "nTotalItems": 40,
+    "nMachines": 2,
+    "nMaterials": 3,
+    "PercentageOfTardyOrders": 0.6,
+    "DueDateRange": 2.5,
+    "Machines": {
+        "0": {
+            "MachineId": 0,
+            "Area": 800.0,
+            "Height": 26.98,
+            "Length": 800.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.86,
+                    1.5,
+                    1.77
+                ],
+                [
+                    2.0,
+                    1.42,
+                    1.31
+                ],
+                [
+                    1.11,
+                    1.33,
+                    1.45
+                ]
+            ],
+            "StartSetup": [
+                1.154,
+                1.286,
+                1.491
+            ],
+            "ScanTime": 0.037,
+            "RecoatTime": 0.5,
+            "RemovalTime": 0
+        },
+        "1": {
+            "MachineId": 1,
+            "Area": 1100.0,
+            "Height": 34.45,
+            "Length": 1100.0,
+            "Width": 1,
+            "Materials": [
+                0,
+                1,
+                2
+            ],
+            "MaterialSetup": [
+                [
+                    1.6,
+                    1.47,
+                    1.68
+                ],
+                [
+                    1.76,
+                    1.5,
+                    1.34
+                ],
+                [
+                    1.46,
+                    1.59,
+                    1.71
+                ]
+            ],
+            "StartSetup": [
+                1.245,
+                1.389,
+                1.374
+            ],
+            "ScanTime": 0.036,
+            "RecoatTime": 0.62,
+            "RemovalTime": 0
+        }
+    },
+    "PartTypes": {
+        "0": {
+            "Height": 17.38,
+            "Length": 50.02,
+            "Width": 1,
+            "Area": 50.02,
+            "Volume": 125.7
+        },
+        "1": {
+            "Height": 14.06,
+            "Length": 198.55,
+            "Width": 1,
+            "Area": 198.55,
+            "Volume": 800.72
+        },
+        "2": {
+            "Height": 30.8,
+            "Length": 149.8,
+            "Width": 1,
+            "Area": 149.8,
+            "Volume": 1650.23
+        },
+        "3": {
+            "Height": 32.61,
+            "Length": 69.79,
+            "Width": 1,
+            "Area": 69.79,
+            "Volume": 1244.13
+        },
+        "4": {
+            "Height": 13.22,
+            "Length": 179.75,
+            "Width": 1,
+            "Area": 179.75,
+            "Volume": 641.7
+        },
+        "5": {
+            "Height": 7.62,
+            "Length": 366.12,
+            "Width": 1,
+            "Area": 366.12,
+            "Volume": 1055.16
+        },
+        "6": {
+            "Height": 34.2,
+            "Length": 666.63,
+            "Width": 1,
+            "Area": 666.63,
+            "Volume": 8777.6
+        },
+        "7": {
+            "Height": 18.99,
+            "Length": 89.68,
+            "Width": 1,
+            "Area": 89.68,
+            "Volume": 683.06
+        },
+        "8": {
+            "Height": 28.26,
+            "Length": 56.0,
+            "Width": 1,
+            "Area": 56.0,
+            "Volume": 176.98
+        },
+        "9": {
+            "Height": 32.61,
+            "Length": 69.79,
+            "Width": 1,
+            "Area": 69.79,
+            "Volume": 1244.13
+        }
+    },
+    "Orders": {
+        "0": {
+            "OrderId": 0,
+            "DueDate": 310.75,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.7,
+            "OrderList": [
+                {
+                    "PartType": 7,
+                    "Quantity": 5,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "1": {
+            "OrderId": 1,
+            "DueDate": 764.95,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.2,
+            "OrderList": [
+                {
+                    "PartType": 0,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 4,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 5,
+                    "Quantity": 3,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "2": {
+            "OrderId": 2,
+            "DueDate": 1043.27,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.62,
+            "OrderList": [
+                {
+                    "PartType": 2,
+                    "Quantity": 4,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 4,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "3": {
+            "OrderId": 3,
+            "DueDate": 541.73,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.9,
+            "OrderList": [
+                {
+                    "PartType": 6,
+                    "Quantity": 3,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 1,
+                    "Quantity": 1,
+                    "Material": 0,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 6,
+                    "Quantity": 1,
+                    "Material": 0,
+                    "Quality": 0
+                }
+            ]
+        },
+        "4": {
+            "OrderId": 4,
+            "DueDate": 874.49,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.51,
+            "OrderList": [
+                {
+                    "PartType": 2,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 5,
+                    "Quantity": 2,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 7,
+                    "Quantity": 2,
+                    "Material": 0,
+                    "Quality": 0
+                }
+            ]
+        },
+        "5": {
+            "OrderId": 5,
+            "DueDate": 11.79,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.4,
+            "OrderList": [
+                {
+                    "PartType": 3,
+                    "Quantity": 4,
+                    "Material": 0,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 8,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                }
+            ]
+        },
+        "6": {
+            "OrderId": 6,
+            "DueDate": 172.93,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.97,
+            "OrderList": [
+                {
+                    "PartType": 3,
+                    "Quantity": 4,
+                    "Material": 2,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 7,
+                    "Quantity": 1,
+                    "Material": 2,
+                    "Quality": 0
+                }
+            ]
+        },
+        "7": {
+            "OrderId": 7,
+            "DueDate": 119.37,
+            "ReleaseDate": 0,
+            "PenaltyCost": 0.28,
+            "OrderList": [
+                {
+                    "PartType": 6,
+                    "Quantity": 3,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 7,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                },
+                {
+                    "PartType": 0,
+                    "Quantity": 1,
+                    "Material": 1,
+                    "Quality": 0
+                }
+            ]
+        }
+    }
+}
