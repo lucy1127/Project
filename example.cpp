@@ -985,10 +985,13 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
     int bestMachineIndex = -1;
     int bestBatchIndex = -1;
     double bestAdditionalDelay = std::numeric_limits<double>::max();
+    double leastRunningTime = std::numeric_limits<double>::max();
 
     for (int machineIndex = 0; machineIndex < machineBatches.size(); ++machineIndex) {
         MachineBatch& machineBatch = machineBatches[machineIndex];
         const Machine& machine = findMachineById(sortedMachines, machineBatch.MachineId);
+
+        double currentRunningTime = machineBatch.RunningTime;
 
         for (int batchIndex = 0; batchIndex < machineBatch.Batches.size(); ++batchIndex) {
 
@@ -1005,10 +1008,11 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
                 tempMachineBatch.Batches[batchIndex].totalArea += partInfo.partType->Area;
                 updateMachineBatches(tempMachineBatch, sortedMachines);
                 double additionalDelay = tempMachineBatch.TotalWeightedDelay - machineBatch.TotalWeightedDelay;
-                if (additionalDelay < bestAdditionalDelay) {
+                if (currentRunningTime < leastRunningTime || (currentRunningTime == leastRunningTime && additionalDelay < bestAdditionalDelay)) {
                     bestAdditionalDelay = additionalDelay;
                     bestMachineIndex = machineIndex;
                     bestBatchIndex = batchIndex;
+                    leastRunningTime = currentRunningTime;
                 }
             }
         }
@@ -1072,6 +1076,7 @@ void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::ve
     for (auto& partInfo : parts) {
         bool inserted = false;
 
+        // 先尝试找到最佳插入位置
         int bestMachineIndex, bestPosition;
         std::tie(bestMachineIndex, bestPosition) = findBestInsertionPosition(machineBatches, partInfo, sortedMachines);
         if (bestMachineIndex != -1 && bestPosition != -1) {
@@ -1086,12 +1091,14 @@ void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::ve
         }
 
         if (!inserted) {
+            // 如果未插入，则选择运行时间最少的机台
             int machineIdToInsert = selectMachineWithLeastRunningTime(machineBatches);
             int machineIndexToInsert = findMachineBatchIndexByMachineId(machineBatches, machineIdToInsert);
             MachineBatch& machineBatchToInsert = machineBatches[machineIndexToInsert];
             const Machine& machineToInsert = findMachineById(sortedMachines, machineIdToInsert);
 
             if (partInfo.partType->Area <= machineToInsert.Area) {
+                // 在运行时间最少的机台上创建新批次
                 Batch newBatch;
                 newBatch.materialType = partInfo.Material;
                 newBatch.parts.push_back(partInfo);
@@ -1102,6 +1109,7 @@ void sortAndInsertParts(std::vector<MachineBatch>& machineBatches, const std::ve
         }
     }
 }
+
 
 
 void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstream& outFile)
@@ -1463,16 +1471,16 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
             result3 = sumTotalWeightedDelay(machineBatches);
             outFile << "  第3次初始解 : " << result3 << "\n";
             outFile << "----------------------------------" << "\n";
-            // std::cout << "11" << std::endl;
-            // if (result3 != 0) {
-            //     std::cout << "12" << std::endl;
-            //     executeRandomMethod(machineBatches, sortedMachines);
-            //     std::cout << "13" << std::endl;
-            //     result4 = sumTotalWeightedDelay(machineBatches);
-            //     outFile << "  第4次初始解 : " << result4 << "\n";
-            //     outFile << "----------------------------------" << "\n";
-            //     printMachineBatch(machineBatches, outFile);
-            // }
+            std::cout << "11" << std::endl;
+            if (result3 != 0) {
+                std::cout << "12" << std::endl;
+                executeRandomMethod(machineBatches, sortedMachines);
+                std::cout << "13" << std::endl;
+                result4 = sumTotalWeightedDelay(machineBatches);
+                outFile << "  第4次初始解 : " << result4 << "\n";
+                outFile << "----------------------------------" << "\n";
+                printMachineBatch(machineBatches, outFile);
+            }
         }
     }
 
@@ -1496,7 +1504,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test/*.json", &findFileData);
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test2/*.json", &findFileData);
     std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
 
     // HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
@@ -1509,7 +1517,7 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            std::string fullPath = "C:/Users/2200555M/Documents/Project/test/" + jsonFileName;
+            std::string fullPath = "C:/Users/2200555M/Documents/Project/test2/" + jsonFileName;
             std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
 
             // std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;

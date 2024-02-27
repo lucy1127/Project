@@ -1,0 +1,1541 @@
+Machine ID: 1
+Machine Area: 900
+Running Time: 81.2464
+Total Weighted Delay: 21.7537
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+  Batch ID: 70467
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+Delayed Batches:
+  MachineID: 1
+  Batch Index: 3
+  Weighted Delay: 21.7537
+  Batch Time : 81.2464
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 78.3414
+Total Weighted Delay: 19.4006
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+  Batch ID: 70466
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+Delayed Batches:
+  MachineID: 6
+  Batch Index: 3
+  Weighted Delay: 19.4006
+  Batch Time : 78.3414
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 61.3106
+Total Weighted Delay: 9.74263
+Batches:
+  Batch ID: 70443
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+  Batch ID: 70457
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70470
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+Delayed Batches:
+  MachineID: 4
+  Batch Index: 1
+  Weighted Delay: 4.13694
+  Batch Time : 57.1974
+  MachineID: 4
+  Batch Index: 2
+  Weighted Delay: 5.60569
+  Batch Time : 61.3106
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 58.5951
+Total Weighted Delay: 3.07344
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70461
+  Batch Material Type: 1
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 3
+Delayed Batches:
+  MachineID: 0
+  Batch Index: 3
+  Weighted Delay: 3.07344
+  Batch Time : 58.5951
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 58.5499
+Total Weighted Delay: 3.05358
+Batches:
+  Batch ID: 70445
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+  Batch ID: 70463
+  Batch Material Type: 0
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 3
+Delayed Batches:
+  MachineID: 3
+  Batch Index: 4
+  Weighted Delay: 3.05358
+  Batch Time : 58.5499
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 105.976
+Total Weighted Delay: 23.9209
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70451
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+  Batch ID: 70462
+  Batch Material Type: 0
+  Batch Total Area: 269.75
+  Parts:
+    Part Type ID: 5
+    Order ID: 3
+Delayed Batches:
+  MachineID: 2
+  Batch Index: 3
+  Weighted Delay: 23.9209
+  Batch Time : 105.976
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 58.7754
+Total Weighted Delay: 6.17111
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70458
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70468
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+Delayed Batches:
+  MachineID: 5
+  Batch Index: 3
+  Weighted Delay: 1.56554
+  Batch Time : 52.6056
+  MachineID: 5
+  Batch Index: 4
+  Weighted Delay: 1.0534
+  Batch Time : 55.6905
+  MachineID: 5
+  Batch Index: 5
+  Weighted Delay: 3.55217
+  Batch Time : 58.7754
+*******************************************
+----------------------------------
+  初始解 : 87.116
+----------------------------------
+----------------------------------
+隨機抽取批次 : 
+----------------------------------
+Delayed Batches:
+MachineID: 2
+BatchID: 70462
+Batch Material Type: 0
+Batch Total Area: 269.75
+Batch TIme: 105.976
+Parts:
+  Part Type ID: 5
+  Order ID: 3
+MachineID: 3
+BatchID: 70463
+Batch Material Type: 0
+Batch Total Area: 146.57
+Batch TIme: 58.5499
+Parts:
+  Part Type ID: 7
+  Order ID: 3
+MachineID: 4
+BatchID: 70470
+Batch Material Type: 0
+Batch Total Area: 122.62
+Batch TIme: 61.3106
+Parts:
+  Part Type ID: 8
+  Order ID: 1
+MachineID: 4
+BatchID: 70457
+Batch Material Type: 0
+Batch Total Area: 454.89
+Batch TIme: 57.1974
+Parts:
+  Part Type ID: 6
+  Order ID: 0
+MachineID: 6
+BatchID: 70466
+Batch Material Type: 0
+Batch Total Area: 161.49
+Batch TIme: 78.3414
+Parts:
+  Part Type ID: 0
+  Order ID: 1
+MachineID: 5
+BatchID: 70468
+Batch Material Type: 0
+Batch Total Area: 122.62
+Batch TIme: 55.6905
+Parts:
+  Part Type ID: 8
+  Order ID: 1
+MachineID: 1
+BatchID: 70467
+Batch Material Type: 0
+Batch Total Area: 161.49
+Batch TIme: 81.2464
+Parts:
+  Part Type ID: 0
+  Order ID: 1
+MachineID: 5
+BatchID: 70458
+Batch Material Type: 0
+Batch Total Area: 454.89
+Batch TIme: 52.6056
+Parts:
+  Part Type ID: 6
+  Order ID: 0
+MachineID: 0
+BatchID: 70461
+Batch Material Type: 1
+Batch Total Area: 454.89
+Batch TIme: 58.5951
+Parts:
+  Part Type ID: 6
+  Order ID: 3
+---------抽取完批後更新機台-------------
+Machine ID: 1
+Machine Area: 900
+Running Time: 43.6509
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 41.6859
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 24.7192
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70443
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+Delayed Batches:
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 28.0038
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 28.7206
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70445
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 29.651
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70451
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 27.7941
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+Delayed Batches:
+*******************************************
+----------------------------------
+----------------------------------
+ 插入後 : 
+---------抽入後批後更新機台----------------
+Machine ID: 1
+Machine Area: 900
+Running Time: 43.6509
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 41.6859
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 24.7192
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70443
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+Delayed Batches:
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 272.046
+Total Weighted Delay: 324.261
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70468
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70470
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70463
+  Batch Material Type: 0
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 3
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70458
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70457
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70467
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70466
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70461
+  Batch Material Type: 1
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 3
+  Batch ID: 70462
+  Batch Material Type: 0
+  Batch Total Area: 269.75
+  Parts:
+    Part Type ID: 5
+    Order ID: 3
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+  MachineID: 0
+  Batch Index: 5
+  Weighted Delay: 7.37381
+  Batch Time : 62.9775
+  MachineID: 0
+  Batch Index: 6
+  Weighted Delay: 20.3873
+  Batch Time : 86.2158
+  MachineID: 0
+  Batch Index: 7
+  Weighted Delay: 53.0835
+  Batch Time : 119.925
+  MachineID: 0
+  Batch Index: 8
+  Weighted Delay: 80.388
+  Batch Time : 153.634
+  MachineID: 0
+  Batch Index: 9
+  Weighted Delay: 56.264
+  Batch Time : 179.483
+  MachineID: 0
+  Batch Index: 10
+  Weighted Delay: 86.5987
+  Batch Time : 248.425
+  MachineID: 0
+  Batch Index: 11
+  Weighted Delay: 20.166
+  Batch Time : 272.046
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 28.7206
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70445
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 29.651
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70451
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 27.7941
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+Delayed Batches:
+*******************************************
+----------------------------------
+  第2次初始解 : 324.261
+----------------------------------
+----------------------------------
+----------------------------------
+MachineID: 0
+BatchID: 70461
+Material: 1
+Order Info - Order ID: 3
+Part Type Info - Part Type ID: 6
+Part Type Info - Area: 454.89
+----------------------------------
+----------------------------------
+MachineID: 0
+BatchID: 70462
+Material: 0
+Order Info - Order ID: 3
+Part Type Info - Part Type ID: 5
+Part Type Info - Area: 269.75
+----------------------------------
+----------------------------------
+MachineID: 0
+BatchID: 70467
+Material: 0
+Order Info - Order ID: 1
+Part Type Info - Part Type ID: 0
+Part Type Info - Area: 161.49
+----------------------------------
+----------------------------------
+MachineID: 0
+BatchID: 70457
+Material: 0
+Order Info - Order ID: 0
+Part Type Info - Part Type ID: 6
+Part Type Info - Area: 454.89
+----------------------------------
+---------印出抽出完後的機台------------------
+Machine ID: 1
+Machine Area: 900
+Running Time: 43.6509
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 41.6859
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 24.7192
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70443
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+Delayed Batches:
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 112.955
+Total Weighted Delay: 40.9841
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70468
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70470
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70463
+  Batch Material Type: 0
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 3
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70458
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70466
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+  MachineID: 0
+  Batch Index: 5
+  Weighted Delay: 4.71773
+  Batch Time : 58.2345
+  MachineID: 0
+  Batch Index: 6
+  Weighted Delay: 30.4186
+  Batch Time : 91.9438
+  MachineID: 0
+  Batch Index: 7
+  Weighted Delay: 5.84776
+  Batch Time : 112.955
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 28.7206
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70445
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 29.651
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70451
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 27.7941
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+Delayed Batches:
+*******************************************
+*******************************
+Machine ID: 1
+Machine Area: 900
+Running Time: 43.6509
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 41.6859
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 52.0584
+Total Weighted Delay: 4.71821
+Batches:
+  Batch ID: 70457
+  Batch Material Type: 1
+  Batch Total Area: 601.46
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+    Part Type ID: 6
+    Order ID: 0
+Delayed Batches:
+  MachineID: 4
+  Batch Index: 0
+  Weighted Delay: 4.71821
+  Batch Time : 52.0584
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 112.955
+Total Weighted Delay: 40.9841
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70468
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70470
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70463
+  Batch Material Type: 0
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 3
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70458
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70466
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+  MachineID: 0
+  Batch Index: 5
+  Weighted Delay: 4.71773
+  Batch Time : 58.2345
+  MachineID: 0
+  Batch Index: 6
+  Weighted Delay: 30.4186
+  Batch Time : 91.9438
+  MachineID: 0
+  Batch Index: 7
+  Weighted Delay: 5.84776
+  Batch Time : 112.955
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 49.9085
+Total Weighted Delay: 0.055132
+Batches:
+  Batch ID: 70461
+  Batch Material Type: 1
+  Batch Total Area: 577.51
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+    Part Type ID: 6
+    Order ID: 3
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+  MachineID: 3
+  Batch Index: 3
+  Weighted Delay: 0.055132
+  Batch Time : 49.9085
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 65.3432
+Total Weighted Delay: 15.8017
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70467
+  Batch Material Type: 1
+  Batch Total Area: 308.06
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+  MachineID: 2
+  Batch Index: 1
+  Weighted Delay: 7.10312
+  Batch Time : 61.6414
+  MachineID: 2
+  Batch Index: 2
+  Weighted Delay: 8.69861
+  Batch Time : 65.3432
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 85.6521
+Total Weighted Delay: 40.3008
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 392.37
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+    Part Type ID: 5
+    Order ID: 3
+Delayed Batches:
+  MachineID: 5
+  Batch Index: 3
+  Weighted Delay: 40.3008
+  Batch Time : 85.6521
+*******************************************
+----------------------------------
+  第3次初始解 : 101.86
+----------------------------------
+  第4次初始解 : 84.0976
+----------------------------------
+Machine ID: 1
+Machine Area: 900
+Running Time: 43.6509
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70441
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70456
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70464
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 6
+Machine Area: 800
+Running Time: 41.6859
+Total Weighted Delay: 0
+Batches:
+  Batch ID: 70442
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 1
+    Order ID: 5
+  Batch ID: 70455
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70465
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 4
+Machine Area: 800
+Running Time: 52.0584
+Total Weighted Delay: 4.71821
+Batches:
+  Batch ID: 70457
+  Batch Material Type: 1
+  Batch Total Area: 601.46
+  Parts:
+    Part Type ID: 7
+    Order ID: 5
+    Part Type ID: 6
+    Order ID: 0
+Delayed Batches:
+  MachineID: 4
+  Batch Index: 0
+  Weighted Delay: 4.71821
+  Batch Time : 52.0584
+*******************************************
+Machine ID: 0
+Machine Area: 1000
+Running Time: 112.955
+Total Weighted Delay: 40.9841
+Batches:
+  Batch ID: 70444
+  Batch Material Type: 1
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+  Batch ID: 70468
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70470
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+  Batch ID: 70463
+  Batch Material Type: 0
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 3
+  Batch ID: 70450
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70458
+  Batch Material Type: 0
+  Batch Total Area: 454.89
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch ID: 70466
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70454
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+  MachineID: 0
+  Batch Index: 5
+  Weighted Delay: 4.71773
+  Batch Time : 58.2345
+  MachineID: 0
+  Batch Index: 6
+  Weighted Delay: 30.4186
+  Batch Time : 91.9438
+  MachineID: 0
+  Batch Index: 7
+  Weighted Delay: 5.84776
+  Batch Time : 112.955
+*******************************************
+Machine ID: 3
+Machine Area: 1200
+Running Time: 65.8781
+Total Weighted Delay: 1.61083
+Batches:
+  Batch ID: 70461
+  Batch Material Type: 1
+  Batch Total Area: 577.51
+  Parts:
+    Part Type ID: 8
+    Order ID: 5
+    Part Type ID: 6
+    Order ID: 3
+  Batch ID: 70449
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70453
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch ID: 70452
+  Batch Material Type: 1
+  Batch Total Area: 146.57
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+Delayed Batches:
+  MachineID: 3
+  Batch Index: 3
+  Weighted Delay: 1.61083
+  Batch Time : 65.8781
+*******************************************
+Machine ID: 2
+Machine Area: 800
+Running Time: 65.3432
+Total Weighted Delay: 15.8017
+Batches:
+  Batch ID: 70446
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70467
+  Batch Material Type: 1
+  Batch Total Area: 308.06
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+    Part Type ID: 0
+    Order ID: 1
+  Batch ID: 70459
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+Delayed Batches:
+  MachineID: 2
+  Batch Index: 1
+  Weighted Delay: 7.10312
+  Batch Time : 61.6414
+  MachineID: 2
+  Batch Index: 2
+  Weighted Delay: 8.69861
+  Batch Time : 65.3432
+*******************************************
+Machine ID: 5
+Machine Area: 800
+Running Time: 70.1976
+Total Weighted Delay: 20.9827
+Batches:
+  Batch ID: 70447
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70448
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 8
+    Order ID: 4
+  Batch ID: 70460
+  Batch Material Type: 0
+  Batch Total Area: 122.62
+  Parts:
+    Part Type ID: 3
+    Order ID: 0
+  Batch ID: 70469
+  Batch Material Type: 0
+  Batch Total Area: 392.37
+  Parts:
+    Part Type ID: 8
+    Order ID: 1
+    Part Type ID: 5
+    Order ID: 3
+Delayed Batches:
+  MachineID: 5
+  Batch Index: 3
+  Weighted Delay: 20.9827
+  Batch Time : 70.1976
+*******************************************
+結果 : 
+  初始解 : 87.116
+  第2次初始解 : 324.261
+  第3次初始解 : 101.86
+  第4次初始解 : 84.0976
+**********************************
