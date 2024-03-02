@@ -604,43 +604,50 @@ bool compareDelayedBatches(const DelayedBatch& a, const DelayedBatch& b) {
 double tryInsertBatch(MachineBatch& machineBatch, const Batch& batchToInsert, int position, const std::vector<std::pair<int, Machine>>& sortedMachines) {
     MachineBatch tempMachineBatch = machineBatch;
     tempMachineBatch.Batches.insert(tempMachineBatch.Batches.begin() + position, batchToInsert);
-
+    std::cout << "3.4.1" << std::endl;
     tempMachineBatch.RunningTime = 0.0;
     tempMachineBatch.TotalWeightedDelay = 0.0;
-
+    std::cout << "3.4.2" << std::endl;
     int lastMaterial = -1;
     for (size_t i = 0; i < tempMachineBatch.Batches.size(); ++i) {
+        std::cout << "3.4.3" << std::endl;
         const Batch& currentBatch = tempMachineBatch.Batches[i];
+        std::cout << "3.4.4" << std::endl;
         const Machine* machine = nullptr;
         for (const auto& machinePair : sortedMachines) {
             if (machinePair.first == tempMachineBatch.MachineId) {
                 machine = &machinePair.second;
+                std::cout << "3.4.5" << std::endl;
                 break;
             }
         }
         if (!machine) {
             return -1;
+            std::cout << "3.4.6" << std::endl;
         }
-
+        std::cout << "3.4.5.1" << std::endl;
+        
         if (i == 0 || lastMaterial != currentBatch.materialType) {
             if (i == 0) {
                 tempMachineBatch.RunningTime += machine->StartSetup[currentBatch.materialType];
+                std::cout << "3.4.7" << std::endl;
             }
             else {
                 tempMachineBatch.RunningTime += std::accumulate(machine->MaterialSetup[currentBatch.materialType].begin(),
                     machine->MaterialSetup[currentBatch.materialType].end(), 0.0);
+                std::cout << "3.4.8" << std::endl;
             }
         }
-
+        std::cout << "3.4.9" << std::endl;
         double finishTime = calculateFinishTime(currentBatch, machine->MachineId, machine);
         tempMachineBatch.RunningTime += finishTime;
-
+        std::cout << "3.4.10" << std::endl;
         double batchDelay = calculateWeightedDelay(currentBatch, tempMachineBatch.RunningTime);
         tempMachineBatch.TotalWeightedDelay += batchDelay;
-
+        std::cout << "3.4.11" << std::endl;
         lastMaterial = currentBatch.materialType;
     }
-
+    std::cout << "3.4.12" << std::endl;
     return tempMachineBatch.TotalWeightedDelay - machineBatch.TotalWeightedDelay; // 返回额外延迟
 }
 
@@ -730,31 +737,38 @@ void reintegrateDelayedBatches(std::vector<MachineBatch>& machineBatches, std::v
     auto it = delayedBatches.begin();
     while (it != delayedBatches.end()) {
         DelayedBatch& currentBatch = *it;
-
+        std::cout << "3.1" << std::endl;
         double bestAdditionalDelay = std::numeric_limits<double>::max();
         MachineBatch* bestMachineBatch = nullptr;
         int bestPosition = -1;
-
+        std::cout << "3.2" << std::endl;
         // 遍历机器批次以找到最佳插入点
         for (auto& machineBatch : machineBatches) {
+            std::cout << "3.3" << std::endl;
             for (size_t i = 0; i <= machineBatch.Batches.size(); ++i) {
+                std::cout << "3.4" << std::endl;
                 double trialDelay = tryInsertBatch(machineBatch, currentBatch.batch, i, sortedMachines);
+                std::cout << "3.4.1" << std::endl;
                 double additionalDelay = trialDelay - machineBatch.TotalWeightedDelay;
                 if (additionalDelay < bestAdditionalDelay) {
                     bestAdditionalDelay = additionalDelay;
                     bestMachineBatch = &machineBatch;
                     bestPosition = i;
+                    std::cout << "3.5" << std::endl;
                 }
             }
         }
 
         // 决定插入批次
         if (bestMachineBatch && bestPosition >= 0) {
+            std::cout << "3.6" << std::endl;
             insertBatch(bestMachineBatch, bestPosition, currentBatch, sortedMachines);
             it = delayedBatches.erase(it); // 删除已插入的批次并更新迭代器
+            std::cout << "3.7" << std::endl;
         }
         else {
             ++it; // 如果未插入，则继续下一个
+            std::cout << "3.8" << std::endl;
         }
     }
 }
@@ -1335,6 +1349,46 @@ void executeRandomMethod(std::vector<MachineBatch>& machineBatches, const std::v
         break;
     }
 }
+int calculateTotalSize(const std::map<int, std::vector<PartTypeOrderInfo>>& map) {
+    int totalSize = 0;
+    for (const auto& pair : map) {
+        totalSize += pair.second.size(); // 加上每個vector的大小
+    }
+    return totalSize;
+}
+
+double step2(std::vector<MachineBatch>& tempMachineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::cout << "1" << std::endl;
+    std::vector<DelayedBatch> delayedBatchesList = extractAndRandomSelectDelayedBatches(tempMachineBatches, sortedMachines);
+    std::cout << "2" << std::endl;
+    std::cout << "3" << std::endl;
+    reintegrateDelayedBatches(tempMachineBatches, delayedBatchesList, sortedMachines);
+    std::cout << "4" << std::endl;
+    double currentResult = sumTotalWeightedDelay(tempMachineBatches);
+    return currentResult;
+}
+
+double step3(std::vector<MachineBatch>& tempMachineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::cout << "5" << std::endl;
+    std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(tempMachineBatches);
+    std::cout << "6" << std::endl;
+    std::cout << "7" << std::endl;
+    updateMachineBatchesAfterExtraction(tempMachineBatches, extractedParts, sortedMachines);
+    std::cout << "8" << std::endl;
+    std::cout << "9" << std::endl;
+    sortAndInsertParts(tempMachineBatches, sortedMachines, extractedParts);
+    std::cout << "10" << std::endl;
+
+    double currentResult = sumTotalWeightedDelay(tempMachineBatches);
+    return currentResult;
+}
+double step4(std::vector<MachineBatch>& tempMachineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::cout << "12" << std::endl;
+    executeRandomMethod(tempMachineBatches, sortedMachines);
+    std::cout << "13" << std::endl;
+    double currentResult = sumTotalWeightedDelay(tempMachineBatches);
+    return currentResult;
+}
 
 void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstream& allTestFile)
 {
@@ -1427,88 +1481,93 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
     outFile << "  初始解 : " << result << "\n"; //step 6.
     outFile << "----------------------------------" << "\n";
 
-    double result2 = -1.0, result3 = -1.0, result4 = -1.0;
+    int machineSize = sortedMachines.size();
+    int partSize = calculateTotalSize(finalSorted);
 
+    auto bestMachineBatches = machineBatches;
+    double bestResult = result; // 這裡使用深拷貝以確保完全獨立
+    //零件總數 * 機台數量 * 45
     if (result != 0) {
-        std::cout << "1" << std::endl;
-        outFile << "----------------------------------" << "\n";
-        std::vector<DelayedBatch> delayedBatchesList = extractAndRandomSelectDelayedBatches(machineBatches, sortedMachines);
-        std::cout << "2" << std::endl;
-        outFile << "隨機抽取批次 : " << "\n";
-        outFile << "----------------------------------" << "\n";
-        printDelayedBatches(delayedBatchesList, outFile);
-        outFile << "---------抽取完批後更新機台-------------" << "\n";
-        printMachineBatch(machineBatches, outFile);
-        std::cout << "3" << std::endl;
-        outFile << "----------------------------------" << "\n";
-        reintegrateDelayedBatches(machineBatches, delayedBatchesList, sortedMachines);
-        std::cout << "4" << std::endl;
-        outFile << "----------------------------------" << "\n";
-        outFile << " 插入後 : " << "\n";
-        outFile << "---------抽入後批後更新機台----------------" << "\n";
-        printMachineBatch(machineBatches, outFile);
-        outFile << "----------------------------------" << "\n";
-        result2 = sumTotalWeightedDelay(machineBatches);
-        outFile << "  第2次初始解 : " << result2 << "\n";
-        outFile << "----------------------------------" << "\n";
-        if (result2 != 0) {
-            std::cout << "5" << std::endl;
-            std::vector<PartTypeOrderInfo> extractedParts = extractAndRandomSelectParts(machineBatches);
-            std::cout << "6" << std::endl;
-            outFile << "----------------------------------" << "\n";
-            printPartTypeOrderInfos(extractedParts, outFile);
-            outFile << "---------印出抽出完後的機台------------------" << "\n";
-            std::cout << "7" << std::endl;
-            updateMachineBatchesAfterExtraction(machineBatches, extractedParts, sortedMachines);
-            std::cout << "8" << std::endl;
-            printMachineBatch(machineBatches, outFile);
-            outFile << "*******************************" << "\n";
-            std::cout << "9" << std::endl;
-            sortAndInsertParts(machineBatches, sortedMachines, extractedParts);
-            std::cout << "10" << std::endl;
-            printMachineBatch(machineBatches, outFile);
-            outFile << "----------------------------------" << "\n";
-            result3 = sumTotalWeightedDelay(machineBatches);
-            outFile << "  第3次初始解 : " << result3 << "\n";
-            outFile << "----------------------------------" << "\n";
-            std::cout << "11" << std::endl;
-            if (result3 != 0) {
-                std::cout << "12" << std::endl;
-                executeRandomMethod(machineBatches, sortedMachines);
-                std::cout << "13" << std::endl;
-                result4 = sumTotalWeightedDelay(machineBatches);
-                outFile << "  第4次初始解 : " << result4 << "\n";
-                outFile << "----------------------------------" << "\n";
-                printMachineBatch(machineBatches, outFile);
+        for (int i = 0;i < partSize * machineSize * 45;i++) {
+            auto tempMachineBatches = bestMachineBatches;
+
+            double currentResult = step2(tempMachineBatches, sortedMachines);
+
+            if (currentResult < bestResult) {
+                bestMachineBatches = tempMachineBatches;
+                bestResult = currentResult;
+                outFile << "第二步改進的解 : " << bestResult << "\n";
+            }
+            else {
+                outFile << "第二步保留之前的最佳解，當前解：" << currentResult << "\n";
+            }
+
+            if (currentResult == 0) {
+                continue; // 如果第二步結果為0，跳過後續步驟
+            }
+
+            // 進行第三步之前，基於當前最佳解（可能是從第一步或第二步保留下來的）
+            tempMachineBatches = bestMachineBatches; // 確保第三步基於當前最佳解
+            double currentResult2 = step3(tempMachineBatches, sortedMachines);
+
+            if (currentResult2 < bestResult) {
+                bestMachineBatches = tempMachineBatches; // 如果第三步改進，更新最佳解
+                bestResult = currentResult2;
+                outFile << "第三步改進的解 : " << bestResult << "\n";
+            }
+            else {
+                outFile << "第三步保留之前的最佳解，當前解：" << currentResult2 << "\n";
+            }
+
+            if (currentResult2 == 0) {
+                continue; // 如果第三步結果為0，跳過後續步驟
+            }
+
+            tempMachineBatches = bestMachineBatches;
+            double currentResult3 = step4(tempMachineBatches, sortedMachines);
+
+            if (currentResult3 < bestResult) {
+                bestMachineBatches = tempMachineBatches; // 如果第四步改進，更新最佳解
+                bestResult = currentResult3;
+                outFile << "第四步改進的解 : " << bestResult << "\n";
+            }
+            else {
+                double m = ((currentResult3 - bestResult) / bestResult) * -100;
+                double e_power_m = std::exp(m);
+
+                if (e_power_m >= 0 && e_power_m <= 1) {
+                    // 符合條件，更新最佳解
+                    bestMachineBatches = tempMachineBatches;
+                    bestResult = currentResult3;
+                    outFile << "第四步改進的解 : " << bestResult << "\n";
+                }
+                outFile << "第四步保留之前的最佳解，當前解：" << currentResult3 << "\n";
             }
         }
+
+        outFile << "**********************************" << "\n";
+        printMachineBatch(bestMachineBatches, outFile);
+
+        outFile << "結果 : " << "\n";
+        outFile << "  初始解 : " << result << "\n";
+        outFile << "  最佳解 : " << bestResult << "\n";
+        outFile << "**********************************" << "\n";
+
+        allTestFile << "檔案 名稱: " << file_path.substr(file_path.find_last_of("/\\") + 1) << "\n";
+        allTestFile << "  初始解 : " << result << "\n";
+        allTestFile << "  最佳解 : " << bestResult << "\n";
     }
-
-
-
-    outFile << "結果 : " << "\n";
-    outFile << "  初始解 : " << result << "\n";
-    outFile << "  第2次初始解 : " << result2 << "\n";
-    outFile << "  第3次初始解 : " << result3 << "\n";
-    outFile << "  第4次初始解 : " << result4 << "\n";
-    outFile << "**********************************" << "\n";
-
-    allTestFile << "檔案 名稱: " << file_path.substr(file_path.find_last_of("/\\") + 1) << "\n";
-    allTestFile << "  初始解 : " << result << "\n";
-    allTestFile << "  第2次初始解 : " << result2 << "\n";
-    allTestFile << "  第3次初始解 : " << result3 << "\n";
-    allTestFile << "  第4次初始解 : " << result4 << "\n\n";
-
 }
+
 
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    // HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test/*.json", &findFileData);
-    // std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test2/*.json", &findFileData);
+    std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
 
-    HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
-    std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
+    // HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
+    // std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
@@ -1517,11 +1576,11 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            // std::string fullPath = "C:/Users/2200555M/Documents/Project/test/" + jsonFileName;
-            // std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
+            std::string fullPath = "C:/Users/2200555M/Documents/Project/test2/" + jsonFileName;
+            std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
 
-            std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
-            std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
+            // std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
+            // std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
 
             std::ofstream outFile(outputFileName);
 
