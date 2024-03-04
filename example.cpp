@@ -602,44 +602,38 @@ bool compareDelayedBatches(const DelayedBatch& a, const DelayedBatch& b) {
 }
 
 double tryInsertBatch(MachineBatch& machineBatch, const Batch& batchToInsert, int position, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    MachineBatch tempMachineBatch = machineBatch;
+    MachineBatch& tempMachineBatch = machineBatch;
     tempMachineBatch.Batches.insert(tempMachineBatch.Batches.begin() + position, batchToInsert);
     std::cout << "3.4.1" << std::endl;
     tempMachineBatch.RunningTime = 0.0;
     tempMachineBatch.TotalWeightedDelay = 0.0;
     std::cout << "3.4.2" << std::endl;
+    const Machine& machine = findMachineById(sortedMachines, tempMachineBatch.MachineId);
+
     int lastMaterial = -1;
     for (size_t i = 0; i < tempMachineBatch.Batches.size(); ++i) {
         std::cout << "3.4.3" << std::endl;
         const Batch& currentBatch = tempMachineBatch.Batches[i];
         std::cout << "3.4.4" << std::endl;
-        const Machine* machine = nullptr;
-        for (const auto& machinePair : sortedMachines) {
-            if (machinePair.first == tempMachineBatch.MachineId) {
-                machine = &machinePair.second;
-                std::cout << "3.4.5" << std::endl;
-                break;
-            }
-        }
-        if (!machine) {
-            return -1;
-            std::cout << "3.4.6" << std::endl;
-        }
+
         std::cout << "3.4.5.1" << std::endl;
-        
+        std::cout << lastMaterial << std::endl;
+        std::cout << currentBatch.materialType << std::endl;
+        std::cout << machine.StartSetup[currentBatch.materialType] << std::endl;
+
         if (i == 0 || lastMaterial != currentBatch.materialType) {
             if (i == 0) {
-                tempMachineBatch.RunningTime += machine->StartSetup[currentBatch.materialType];
+                tempMachineBatch.RunningTime += machine.StartSetup[currentBatch.materialType];
                 std::cout << "3.4.7" << std::endl;
             }
             else {
-                tempMachineBatch.RunningTime += std::accumulate(machine->MaterialSetup[currentBatch.materialType].begin(),
-                    machine->MaterialSetup[currentBatch.materialType].end(), 0.0);
+                tempMachineBatch.RunningTime += std::accumulate(machine.MaterialSetup[currentBatch.materialType].begin(),
+                    machine.MaterialSetup[currentBatch.materialType].end(), 0.0);
                 std::cout << "3.4.8" << std::endl;
             }
         }
         std::cout << "3.4.9" << std::endl;
-        double finishTime = calculateFinishTime(currentBatch, machine->MachineId, machine);
+        double finishTime = calculateFinishTime(currentBatch, machine.MachineId, &machine);
         tempMachineBatch.RunningTime += finishTime;
         std::cout << "3.4.10" << std::endl;
         double batchDelay = calculateWeightedDelay(currentBatch, tempMachineBatch.RunningTime);
@@ -1483,12 +1477,15 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
     int machineSize = sortedMachines.size();
     int partSize = calculateTotalSize(finalSorted);
+    outFile << machineSize << "\n";
+    outFile << partSize << "\n";
+    outFile << "----------------------------------" << "\n";
 
     auto bestMachineBatches = machineBatches;
     double bestResult = result; // 這裡使用深拷貝以確保完全獨立
     //零件總數 * 機台數量 * 45
     if (result != 0) {
-        for (int i = 0;i < partSize * machineSize * 45;i++) {
+        for (int i = 0;i < machineSize;i++) {
             auto tempMachineBatches = bestMachineBatches;
 
             double currentResult = step2(tempMachineBatches, sortedMachines);
@@ -1526,21 +1523,15 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
             tempMachineBatches = bestMachineBatches;
             double currentResult3 = step4(tempMachineBatches, sortedMachines);
 
-            if (currentResult3 < bestResult) {
+            double m = ((currentResult3 - bestResult) / bestResult) * -100;
+            double e_power_m = std::exp(m);
+
+            if (currentResult3 < bestResult || e_power_m >= 0 && e_power_m <= 1) {
                 bestMachineBatches = tempMachineBatches; // 如果第四步改進，更新最佳解
                 bestResult = currentResult3;
                 outFile << "第四步改進的解 : " << bestResult << "\n";
             }
             else {
-                double m = ((currentResult3 - bestResult) / bestResult) * -100;
-                double e_power_m = std::exp(m);
-
-                if (e_power_m >= 0 && e_power_m <= 1) {
-                    // 符合條件，更新最佳解
-                    bestMachineBatches = tempMachineBatches;
-                    bestResult = currentResult3;
-                    outFile << "第四步改進的解 : " << bestResult << "\n";
-                }
                 outFile << "第四步保留之前的最佳解，當前解：" << currentResult3 << "\n";
             }
         }
