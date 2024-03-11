@@ -1529,13 +1529,13 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
                 tempMachineBatches = bestMachineBatches;
                 double currentResult3 = step4(tempMachineBatches, sortedMachines);
 
-                srand(static_cast<unsigned>(time(0)));
-                double random_prob = static_cast<double>(rand()) / RAND_MAX;
+                // srand(static_cast<unsigned>(time(0)));
+                // double random_prob = static_cast<double>(rand()) / RAND_MAX;
 
                 double m = ((currentResult3 - bestResult) / bestResult) * -100;
                 double e_power_m = std::exp(m);
 
-                if (currentResult3 < bestResult || random_prob <= e_power_m) {
+                if (currentResult3 < bestResult || 0 <= e_power_m && e_power_m <= 1) {
                     bestMachineBatches = tempMachineBatches; // 如果第四步改進，更新最佳解
                     bestResult = currentResult3;
                     outFile << "第四步改進的解 : " << bestResult << "\n";
@@ -1561,7 +1561,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    // HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test/*.json", &findFileData);
+    // HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test2/*.json", &findFileData);
     // std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
 
     HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
@@ -1574,7 +1574,7 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            // std::string fullPath = "C:/Users/2200555M/Documents/Project/test/" + jsonFileName;
+            // std::string fullPath = "C:/Users/2200555M/Documents/Project/test2/" + jsonFileName;
             // std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
 
             std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
