@@ -1124,7 +1124,7 @@ void printMachineBatch(const std::vector<MachineBatch> MachineBatchs, std::ofstr
 
         for (const auto& batch : machineBatch.Batches)
         {
-            outFile << "  Batch ID: " << batch.batchId << "\n";
+            // outFile << "  Batch ID: " << batch.batchId << "\n";
             outFile << "  Batch Material Type: " << batch.materialType << "\n";
             outFile << "  Batch Total Area: " << batch.totalArea << "\n";
             outFile << "  Parts:\n";
@@ -1318,12 +1318,66 @@ void method3(std::vector<MachineBatch>& machineBatches, const std::vector<std::p
 
 //方法4: 從延遲批次中隨機抽取一批次，整批插入到隨機一未延遲批次(要可行)
 void method4(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
+    std::vector<std::pair<int, int>> delayedBatchIndices;
+    for (int i = 0; i < machineBatches.size(); ++i) {
+        if (!machineBatches[i].delayedBatchInfo.empty()) {
+            for (const auto& delayedInfo : machineBatches[i].delayedBatchInfo) {
+                delayedBatchIndices.push_back(std::make_pair(i, delayedInfo.BatchIndex));
+            }
+        }
+    }
+
+    if (delayedBatchIndices.empty()) {
+        std::cout << "没有找到含延遲批次。" << std::endl;
+        return;
+    }
+
+    int randomIndex = std::rand() % delayedBatchIndices.size();
+    int delayedMachineIndex = delayedBatchIndices[randomIndex].first;
+    int delayedBatchIndex = delayedBatchIndices[randomIndex].second;
+    Batch& delayedBatch = machineBatches[delayedMachineIndex].Batches[delayedBatchIndex];
+
+    std::vector<std::pair<int, int>> feasibleTargets;
+    for (int i = 0; i < machineBatches.size(); ++i) {
+        if (i != delayedMachineIndex) { 
+            double machineArea = sortedMachines[i].second.Area;
+            for (int j = 0; j < machineBatches[i].Batches.size(); ++j) {
+                double usedArea = std::accumulate(machineBatches[i].Batches[j].parts.begin(), machineBatches[i].Batches[j].parts.end(), 0.0,
+                    [](double sum, const PartTypeOrderInfo& partInfo) { return sum + partInfo.partType->Area; });
+                double availableArea = machineArea - usedArea;
+                if (machineBatches[i].Batches[j].materialType == delayedBatch.materialType && availableArea >= delayedBatch.totalArea) {
+                    feasibleTargets.push_back(std::make_pair(i, j));
+                }
+            }
+        }
+    }
+
+    if (feasibleTargets.empty()) {
+        std::cout << "没有找到適合的未延遲批次。" << std::endl;
+        return;
+    }
+
+    randomIndex = std::rand() % feasibleTargets.size();
+    int targetMachineIndex = feasibleTargets[randomIndex].first;
+    int targetBatchIndex = feasibleTargets[randomIndex].second;
+    Batch& targetBatch = machineBatches[targetMachineIndex].Batches[targetBatchIndex];
 
 
+    targetBatch.parts.insert(targetBatch.parts.end(), delayedBatch.parts.begin(), delayedBatch.parts.end()); 
+    targetBatch.totalArea += delayedBatch.totalArea; 
+
+    // 清空原延迟批次的零件信息
+    machineBatches[delayedMachineIndex].Batches.erase(machineBatches[delayedMachineIndex].Batches.begin() + delayedBatchIndex);
+
+    // 更新机器批次信息
+    updateMachineBatches(machineBatches[targetMachineIndex], sortedMachines);
+    updateMachineBatches(machineBatches[delayedMachineIndex], sortedMachines);
 }
 //方法5: 從延遲批次中抽取延遲最大的零件，插入到其他可行位置中
 void method5(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    std::srand(static_cast<unsigned int>(std::time(nullptr))); // 初始化随机数生成器
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); 
 
     // 找出所有延遲零件，以及其對應的機器和批次索引
     std::vector<std::tuple<double, int, int, int>> delayedParts; // 儲存 (延遲時間, 機器索引, 批次索引, 零件索引)
@@ -1374,7 +1428,7 @@ void method5(std::vector<MachineBatch>& machineBatches, const std::vector<std::p
 
 //方法6: 從延遲批次中隨機抽取一批次，將其零件一一插入到其他所有可行位置中
 void method6(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
-    std::srand(static_cast<unsigned int>(std::time(nullptr))); // 初始化随机数生成器
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); 
 
     std::vector<std::pair<int, int>> delayedBatches; // 儲存 (機器索引, 批次索引)
     for (int machineIdx = 0; machineIdx < machineBatches.size(); ++machineIdx) {
@@ -1386,7 +1440,7 @@ void method6(std::vector<MachineBatch>& machineBatches, const std::vector<std::p
     }
 
     if (delayedBatches.empty()) {
-        std::cout << "没有找到含延迟批次。" << std::endl;
+        std::cout << "没有找到含延遲批次。" << std::endl;
         return;
     }
 
@@ -1425,8 +1479,8 @@ void executeRandomMethod(std::vector<MachineBatch>& machineBatches, const std::v
     std::cout << "12.1" << std::endl;
     std::srand(std::time(nullptr)); // 使用當前時間作為隨機數生成器的種子
     std::cout << "12.2" << std::endl;
-     int method = std::rand() % 6 + 1;// 生成1至6之間的隨機數
-    // int method = 6; 
+    //  int method = std::rand() % 6 + 1;// 生成1至6之間的隨機數
+    int method = 4; 
     std::cout << "12.3" << std::endl;
 
     switch (method) {
