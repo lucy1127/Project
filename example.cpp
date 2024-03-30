@@ -291,23 +291,14 @@ double calculateFinishTime(const Batch& batch, const int& machineId, const Machi
 
     double heightTime = maxHeight * machine->RecoatTime;
 
-    return std::max(volumeTime, heightTime);
+    return volumeTime + heightTime;
 }
-bool canAddToBatchOrNeedNewBatch(const Batch& batch, int machineId, const Machine* machine)
-{
-    double volumeTime = 0.0;
-    double maxHeight = 0.0;
-
-    for (const auto& partInfo : batch.parts)
-    {
-        volumeTime += partInfo.partType->Volume * machine->ScanTime;
-        maxHeight = std::max(maxHeight, partInfo.partType->Height);
-    }
-
-    double heightTime = maxHeight * machine->RecoatTime;
-    return volumeTime < heightTime;
+bool canAddPartToMachineBatch(const PartTypeOrderInfo& partInfo, const Machine& machine, double currentBatchArea) {
+    double volumeTime = partInfo.partType->Volume * machine.ScanTime;
+    double heightTime = partInfo.partType->Height * machine.RecoatTime;
+    return (volumeTime < heightTime) && ((currentBatchArea + partInfo.partType->Area) <= machine.Area);
 }
-struct AllocationResult {
+struct AllocationResult { //
     Batch batch;
     std::map<int, std::vector<PartTypeOrderInfo>> updatedMaterials;
 };
@@ -331,8 +322,7 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
 
                 double finishTime = calculateFinishTime(newBatch, selectedMachineBatch.MachineId, machine);
 
-                if (canAddToBatchOrNeedNewBatch(newBatch, selectedMachineBatch.MachineId, machine) &&
-                    it->orderInfo.DueDate < finishTime) {
+                if (it->orderInfo.DueDate < finishTime) {
                     it = materialList.erase(it); // 成功添加到批次，从待处理材料中移除
                 }
                 else {
@@ -1009,11 +999,10 @@ std::tuple<int, int> findBestInsertionPosition(std::vector<MachineBatch>& machin
             Batch& batch = machineBatch.Batches[batchIndex];
             double finishTime = calculateFinishTime(batch, machineBatch.MachineId, &machine);
 
-            if (canInsertPartToBatch(partInfo, batch, machine) && !canAddToBatchOrNeedNewBatch(batch, machine.MachineId, &machine) ||
-                partInfo.orderInfo.DueDate >= finishTime) {
+            if (canInsertPartToBatch(partInfo, batch, machine) && partInfo.orderInfo.DueDate >= finishTime) {
 
                 MachineBatch tempMachineBatch = machineBatch;
-                std::vector<PartTypeOrderInfo> tempParts; // 临时的vector用于存放单个partInfo
+                std::vector<PartTypeOrderInfo> tempParts;
                 tempParts.push_back(partInfo);
                 tempMachineBatch.Batches[batchIndex].parts = tempParts;
                 tempMachineBatch.Batches[batchIndex].totalArea += partInfo.partType->Area;
@@ -1327,11 +1316,117 @@ void method3(std::vector<MachineBatch>& machineBatches, const std::vector<std::p
     }
 }
 
+//方法4: 從延遲批次中隨機抽取一批次，整批插入到隨機一未延遲批次(要可行)
+void method4(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+
+
+}
+//方法5: 從延遲批次中抽取延遲最大的零件，插入到其他可行位置中
+void method5(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); // 初始化随机数生成器
+
+    // 找出所有延遲零件，以及其對應的機器和批次索引
+    std::vector<std::tuple<double, int, int, int>> delayedParts; // 儲存 (延遲時間, 機器索引, 批次索引, 零件索引)
+    for (int machineIdx = 0; machineIdx < machineBatches.size(); ++machineIdx) {
+        for (int batchIdx = 0; batchIdx < machineBatches[machineIdx].Batches.size(); ++batchIdx) {
+            for (int partIdx = 0; partIdx < machineBatches[machineIdx].Batches[batchIdx].parts.size(); ++partIdx) {
+                double delay = machineBatches[machineIdx].Batches[batchIdx].parts[partIdx].orderInfo.PenaltyCost;
+                delayedParts.emplace_back(delay, machineIdx, batchIdx, partIdx);
+            }
+        }
+    }
+
+    if (delayedParts.empty()) {
+        std::cout << "没有找到含延遲零件的批次。" << std::endl;
+        return;
+    }
+
+    // 根据延遲時間排序，選取延遲最大的零件
+    std::sort(delayedParts.begin(), delayedParts.end(), std::greater<>());
+    auto& maxDelayedPart = delayedParts.front(); // 延遲時間最長的零件信息
+
+    int machineIdx = std::get<1>(maxDelayedPart);
+    int batchIdx = std::get<2>(maxDelayedPart);
+    int partIdx = std::get<3>(maxDelayedPart);
+    PartTypeOrderInfo selectedPart = machineBatches[machineIdx].Batches[batchIdx].parts[partIdx];
+
+    // 從原批次中移除零件
+    machineBatches[machineIdx].Batches[batchIdx].parts.erase(machineBatches[machineIdx].Batches[batchIdx].parts.begin() + partIdx);
+
+    // 尋找最佳插入位置
+    int bestMachineIndex = -1, bestBatchIndex = -1;
+    std::tie(bestMachineIndex, bestBatchIndex) = findBestInsertionPosition(machineBatches, selectedPart, sortedMachines);
+
+    // 如果找到了插入位置，則插入零件
+    if (bestMachineIndex != -1 && bestBatchIndex != -1) {
+        MachineBatch& targetMachineBatch = machineBatches[bestMachineIndex];
+        Batch& targetBatch = targetMachineBatch.Batches[bestBatchIndex];
+
+        targetBatch.parts.push_back(selectedPart);
+
+        // 更新機器批次信息
+        updateMachineBatches(targetMachineBatch, sortedMachines);
+    }
+    else {
+        std::cout << "没有找到適合的插入位置。" << std::endl;
+    }
+}
+
+//方法6: 從延遲批次中隨機抽取一批次，將其零件一一插入到其他所有可行位置中
+void method6(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); // 初始化随机数生成器
+
+    std::vector<std::pair<int, int>> delayedBatches; // 儲存 (機器索引, 批次索引)
+    for (int machineIdx = 0; machineIdx < machineBatches.size(); ++machineIdx) {
+        for (int batchIdx = 0; batchIdx < machineBatches[machineIdx].Batches.size(); ++batchIdx) {
+            if (!machineBatches[machineIdx].Batches[batchIdx].parts.empty()) {
+                delayedBatches.emplace_back(machineIdx, batchIdx);
+            }
+        }
+    }
+
+    if (delayedBatches.empty()) {
+        std::cout << "没有找到含延迟批次。" << std::endl;
+        return;
+    }
+
+    // 隨機選擇一個批次
+    int randomIndex = std::rand() % delayedBatches.size();
+    int machineIdx = delayedBatches[randomIndex].first;
+    int batchIdx = delayedBatches[randomIndex].second;
+    Batch& selectedBatch = machineBatches[machineIdx].Batches[batchIdx];
+
+    // 複製批次中的零件列表，以便在遍历过程中修改原批次
+    auto partsToReallocate = selectedBatch.parts;
+    selectedBatch.parts.clear(); // 清空原批次中的零件列表
+
+    // 對每個零件尋找新的插入位置
+    for (auto& part : partsToReallocate) {
+        int bestMachineIndex = -1, bestBatchIndex = -1;
+        std::tie(bestMachineIndex, bestBatchIndex) = findBestInsertionPosition(machineBatches, part, sortedMachines);
+
+        if (bestMachineIndex != -1 && bestBatchIndex != -1) {
+            MachineBatch& targetMachineBatch = machineBatches[bestMachineIndex];
+            Batch& targetBatch = targetMachineBatch.Batches[bestBatchIndex];
+
+            targetBatch.parts.push_back(part);
+
+            updateMachineBatches(targetMachineBatch, sortedMachines);
+        } else {
+            std::cout << "没有找到適合的插入位置。" << std::endl;
+        }
+    }
+
+    updateMachineBatches(machineBatches[machineIdx], sortedMachines);
+}
+
+
 void executeRandomMethod(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
     std::cout << "12.1" << std::endl;
     std::srand(std::time(nullptr)); // 使用當前時間作為隨機數生成器的種子
     std::cout << "12.2" << std::endl;
-    int method = std::rand() % 3 + 1; // 生成1至3之間的隨機數
+     int method = std::rand() % 6 + 1;// 生成1至6之間的隨機數
+    // int method = 6; 
     std::cout << "12.3" << std::endl;
 
     switch (method) {
@@ -1343,6 +1438,15 @@ void executeRandomMethod(std::vector<MachineBatch>& machineBatches, const std::v
         break;
     case 3:
         method3(machineBatches, sortedMachines);
+        break;
+    case 4:
+        method4(machineBatches, sortedMachines);
+        break;
+    case 5:
+        method5(machineBatches, sortedMachines);
+        break;
+    case 6:
+        method6(machineBatches, sortedMachines);
         break;
     }
 }
@@ -1387,6 +1491,31 @@ double step4(std::vector<MachineBatch>& tempMachineBatches, const std::vector<st
     double currentResult = sumTotalWeightedDelay(tempMachineBatches);
     return currentResult;
 }
+
+std::vector<PartTypeOrderInfo> extractAndRemoveZeroPenaltyParts(std::vector<MachineBatch>& machineBatches, const std::vector<std::pair<int, Machine>>& sortedMachines) {
+    std::vector<PartTypeOrderInfo> zeroPenaltyParts;
+
+    // 遍歷每台機器的批次
+    for (auto& machineBatch : machineBatches) {
+        // 遍歷每個批次
+        for (auto& batch : machineBatch.Batches) {
+            // 使用迭代器遍歷，以便可以安全刪除
+            for (auto partIt = batch.parts.begin(); partIt != batch.parts.end();) {
+                if (partIt->orderInfo.PenaltyCost == 0) {
+                    zeroPenaltyParts.push_back(*partIt);
+                    partIt = batch.parts.erase(partIt);
+                }
+                else {
+                    ++partIt;
+                }
+            }
+        }
+        updateMachineBatches(machineBatch, sortedMachines);
+    }
+
+    return zeroPenaltyParts;
+}
+
 
 
 void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstream& allTestFile)
@@ -1483,10 +1612,11 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
     int machineSize = sortedMachines.size();
     int partSize = calculateTotalSize(finalSorted);
 
+    //如果零件懲罰權重為零，就一定放在最後做(就是等演算法結束，最後再把它隨便插回去)
+    auto extractedParts = extractAndRemoveZeroPenaltyParts(machineBatches, sortedMachines);
 
     auto bestMachineBatches = machineBatches;
     double bestResult = result; // 這裡使用深拷貝以確保完全獨立
-
 
     if (result != 0) {
 
@@ -1546,6 +1676,11 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
             }
         }
     }
+
+    sortAndInsertParts(bestMachineBatches, sortedMachines, extractedParts); //把零件權重0的放回去
+    bestResult = sumTotalWeightedDelay(bestMachineBatches);
+
+
     outFile << "**********************************" << "\n";
     printMachineBatch(bestMachineBatches, outFile);
     outFile << "結果 : " << "\n";
@@ -1561,11 +1696,11 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    // HANDLE hFind = FindFirstFileA("C:/Users/2200555M/Documents/Project/test2/*.json", &findFileData);
-    // std::ofstream allTestFile("C:/Users/2200555M/Documents/Project/output/allTest.txt"); // 全局結果文件
+    HANDLE hFind = FindFirstFileA("C:/Users/2200555.SYSTEX/Documents/Project/test2/*.json", &findFileData);
+    std::ofstream allTestFile("C:/Users/2200555.SYSTEX/Documents/Project/output/allTest.txt"); // 全局結果文件
 
-    HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
-    std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
+    // HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
+    // std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
@@ -1574,11 +1709,11 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            // std::string fullPath = "C:/Users/2200555M/Documents/Project/test2/" + jsonFileName;
-            // std::string outputFileName = "C:/Users/2200555M/Documents/Project/output/output_" + jsonFileName + ".txt";
+            std::string fullPath = "C:/Users/2200555.SYSTEX/Documents/Project/test2/" + jsonFileName;
+            std::string outputFileName = "C:/Users/2200555.SYSTEX/Documents/Project/output/output_" + jsonFileName + ".txt";
 
-            std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
-            std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
+            // std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
+            // std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
 
             std::ofstream outFile(outputFileName);
 
