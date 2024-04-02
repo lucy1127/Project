@@ -211,3 +211,234 @@ Batches:
     Order ID: 3
   Batch Material Type: 1
   Batch Total Area: 64.76
+  Parts:
+    Part Type ID: 9
+    Order ID: 3
+Delayed Batches:
+  MachineID: 1
+  Batch Index: 18
+  Weighted Delay: 0.159755
+  Batch Time : 572.993
+  MachineID: 1
+  Batch Index: 19
+  Weighted Delay: 14.3736
+  Batch Time : 605.297
+*******************************************
+----------------------------------
+  初始解 : 15.9721
+----------------------------------
+第二步改進的解 : 14.6841
+第三步改進的解 : 3.06989
+第四步改進的解 : 3.06989
+第二步保留之前的最佳解，當前解：11.9429
+第三步改進的解 : 0
+**********************************
+Machine ID: 0
+Machine Area: 800
+Running Time: 548.309
+Total Weighted Delay: 0
+Batches:
+  Batch Material Type: 1
+  Batch Total Area: 64.76
+  Parts:
+    Part Type ID: 9
+    Order ID: 3
+  Batch Material Type: 1
+  Batch Total Area: 615.12
+  Parts:
+    Part Type ID: 7
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 64.76
+  Parts:
+    Part Type ID: 9
+    Order ID: 3
+  Batch Material Type: 2
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 198.55
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 198.55
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch Material Type: 0
+  Batch Total Area: 776.61
+  Parts:
+    Part Type ID: 7
+    Order ID: 1
+    Part Type ID: 14
+    Order ID: 3
+  Batch Material Type: 0
+  Batch Total Area: 615.12
+  Parts:
+    Part Type ID: 7
+    Order ID: 1
+  Batch Material Type: 0
+  Batch Total Area: 615.12
+  Parts:
+    Part Type ID: 7
+    Order ID: 1
+  Batch Material Type: 1
+  Batch Total Area: 39.03
+  Parts:
+    Part Type ID: 19
+    Order ID: 1
+  Batch Material Type: 1
+  Batch Total Area: 39.03
+  Parts:
+    Part Type ID: 19
+    Order ID: 1
+  Batch Material Type: 0
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 3
+  Batch Material Type: 1
+  Batch Total Area: 64.76
+  Parts:
+    Part Type ID: 9
+    Order ID: 3
+Delayed Batches:
+*******************************************
+Machine ID: 1
+Machine Area: 1100
+Running Time: 562.666
+Total Weighted Delay: 0
+Batches:
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 2
+  Batch Material Type: 2
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 282.93
+  Parts:
+    Part Type ID: 4
+    Order ID: 0
+  Batch Material Type: 1
+  Batch Total Area: 222.18
+  Parts:
+    Part Type ID: 16
+    Order ID: 0
+  Batch Material Type: 2
+  Batch Total Area: 198.55
+  Parts:
+    Part Type ID: 6
+    Order ID: 0
+  Batch Material Type: 1
+  Batch Total Area: 33.58
+  Parts:
+    Part Type ID: 18
+    Order ID: 0
+  Batch Material Type: 0
+  Batch Total Area: 898.05
+  Parts:
+    Part Type ID: 7
+    Order ID: 1
+    Part Type ID: 4
+    Order ID: 3
+  Batch Material Type: 0
+  Batch Total Area: 898.05
+  Parts:
+    Part Type ID: 7
+    Order ID: 1
+    Part Type ID: 4
+    Order ID: 3
+  Batch Material Type: 1
+  Batch Total Area: 39.03
+  Parts:
+    Part Type ID: 19
+    Order ID: 1
+  Batch Material Type: 1
+  Batch Total Area: 39.03
+  Parts:
+    Part Type ID: 19
+    Order ID: 1
+  Batch Material Type: 1
+  Batch Total Area: 39.03
+  Parts:
+    Part Type ID: 19
+    Order ID: 1
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 14
+    Order ID: 3
+  Batch Material Type: 0
+  Batch Total Area: 161.49
+  Parts:
+    Part Type ID: 14
+    Order ID: 3
+  Batch Material Type: 1
+  Batch Total Area: 64.76
+  Parts:
+    Part Type ID: 9
+    Order ID: 3
+Delayed Batches:
+*******************************************
+結果 : 
+  初始解 : 15.9721
+  最佳解 : 0
+**********************************
