@@ -1689,7 +1689,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
         auto tempMachineBatches = bestMachineBatches;
 
-        for (int i = 0;i < 3;i++) {
+        for (int i = 0;i < machineSize * partSize * 45;i++) {
             if (bestResult != 0) {
                 double currentResult = step2(tempMachineBatches, sortedMachines);
 
@@ -1763,11 +1763,11 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    HANDLE hFind = FindFirstFileA("C:/Users/2200555.SYSTEX/Documents/Project/test2/*.json", &findFileData);
-    std::ofstream allTestFile("C:/Users/2200555.SYSTEX/Documents/Project/output/allTest.txt"); // 全局結果文件
+    // HANDLE hFind = FindFirstFileA("C:/Users/2200555.SYSTEX/Documents/Project/test2/*.json", &findFileData);
+    // std::ofstream allTestFile("C:/Users/2200555.SYSTEX/Documents/Project/output/allTest.txt"); // 全局結果文件
 
-    // HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
-    // std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
+    HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
+    std::ofstream allTestFile("C:/Users/USER/Desktop/Project-main/output/allTest.txt"); // 全局結果文件
 
     if (hFind == INVALID_HANDLE_VALUE) {
         std::cerr << "FindFirstFile failed\n";
@@ -1776,11 +1776,11 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            std::string fullPath = "C:/Users/2200555.SYSTEX/Documents/Project/test2/" + jsonFileName;
-            std::string outputFileName = "C:/Users/2200555.SYSTEX/Documents/Project/output/output_" + jsonFileName + ".txt";
+            // std::string fullPath = "C:/Users/2200555.SYSTEX/Documents/Project/test2/" + jsonFileName;
+            // std::string outputFileName = "C:/Users/2200555.SYSTEX/Documents/Project/output/output_" + jsonFileName + ".txt";
 
-            // std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
-            // std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
+            std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
+            std::string outputFileName = "C:/Users/USER/Desktop/Project-main/output/output_" + jsonFileName + ".txt";
 
             std::ofstream outFile(outputFileName);
 
