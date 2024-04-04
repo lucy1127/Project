@@ -319,7 +319,7 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
         for (auto it = materialList.begin(); it != materialList.end();) {
             double partArea = it->partType->Area; // 确保 partArea 有一个合理的值
 
-            if (newBatch.totalArea + partArea <= selectedMachineBatch.MachineArea && canAddPartToMachineBatch(*it, *machine, newBatch.totalArea)) {
+            if (newBatch.totalArea + partArea <= selectedMachineBatch.MachineArea) {
                 newBatch.parts.push_back(*it);
                 newBatch.totalArea += partArea; // 更新 totalArea
 
@@ -345,7 +345,6 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
             }
         }
 
-        // 对于空批次且材料列表不为空的情况，强制添加第一个部件
         if (newBatch.parts.empty() && !materialList.empty()) {
             double forcedPartArea = materialList.front().partType->Area;
             newBatch.parts.push_back(materialList.front());
@@ -356,6 +355,50 @@ AllocationResult allocateMaterialToMachine(MachineBatch& selectedMachineBatch, i
 
     return { newBatch, remainingMaterials };
 }
+
+AllocationResult allocateMaterialToMachine2(MachineBatch& selectedMachineBatch, int selectedMaterial,
+    std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials,
+    const Machine* machine) {
+    Batch newBatch;
+    newBatch.batchId = currentBatchId++;
+    newBatch.materialType = selectedMaterial;
+    newBatch.totalArea = 0.0;
+
+    if (remainingMaterials.find(selectedMaterial) != remainingMaterials.end()) {
+        auto& materialList = remainingMaterials[selectedMaterial];
+
+        std::vector<PartTypeOrderInfo> notAdded;
+        bool foundType = false;
+        int partTypeId = 0;
+
+        for (auto& partOrderInfo : materialList) {
+            if (newBatch.totalArea >= selectedMachineBatch.MachineArea) break;
+
+            if (!foundType) {
+                partTypeId = partOrderInfo.partType->PartTypeId;
+                foundType = true;
+            }
+            else if (partOrderInfo.partType->PartTypeId != partTypeId) {
+                notAdded.push_back(partOrderInfo);
+                continue;
+            }
+
+            double partArea = partOrderInfo.partType->Area;
+            if (newBatch.totalArea + partArea > selectedMachineBatch.MachineArea) {
+                notAdded.push_back(partOrderInfo);
+                continue;
+            }
+
+            newBatch.parts.push_back(partOrderInfo);
+            newBatch.totalArea += partArea;
+        }
+
+        materialList = notAdded;  // Update the material list with parts that were not added.
+    }
+
+    return { newBatch, remainingMaterials };
+}
+
 
 
 void updateRemainingMaterials(std::map<int, std::vector<PartTypeOrderInfo>>& remainingMaterials, int selectedMaterialType)
@@ -481,6 +524,8 @@ std::vector<MachineBatch> createMachineBatches(
         }
 
         AllocationResult result = allocateMaterialToMachine(machineBatchRef, selectedMaterial, remainingMaterials, &machineIt->second);
+        // AllocationResult result = allocateMaterialToMachine2(machineBatchRef, selectedMaterial, remainingMaterials, &machineIt->second);
+
         remainingMaterials = result.updatedMaterials;
         updateRemainingMaterials(remainingMaterials, selectedMaterial);
 
@@ -1763,7 +1808,7 @@ void read_json(const std::string& file_path, std::ofstream& outFile, std::ofstre
 
 int main() {
     WIN32_FIND_DATAA findFileData;
-    // HANDLE hFind = FindFirstFileA("C:/Users/2200555.SYSTEX/Documents/Project/test2/*.json", &findFileData);
+    // HANDLE hFind = FindFirstFileA("C:/Users/2200555.SYSTEX/Documents/Project/test/*.json", &findFileData);
     // std::ofstream allTestFile("C:/Users/2200555.SYSTEX/Documents/Project/output/allTest.txt"); // 全局結果文件
 
     HANDLE hFind = FindFirstFileA("C:/Users/USER/Desktop/Project-main/test/*.json", &findFileData);
@@ -1776,7 +1821,7 @@ int main() {
     else {
         do {
             std::string jsonFileName = std::string(findFileData.cFileName);
-            // std::string fullPath = "C:/Users/2200555.SYSTEX/Documents/Project/test2/" + jsonFileName;
+            // std::string fullPath = "C:/Users/2200555.SYSTEX/Documents/Project/test/" + jsonFileName;
             // std::string outputFileName = "C:/Users/2200555.SYSTEX/Documents/Project/output/output_" + jsonFileName + ".txt";
 
             std::string fullPath = "C:/Users/USER/Desktop/Project-main/test/" + jsonFileName;
